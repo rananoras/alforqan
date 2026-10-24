@@ -1,0 +1,297 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["admin", "staff", "teacher", "accountant", "parent", "student"] },
+        "phone": { "type": "string", "maxLength": 32 },
+        "assignedCircleId": { "type": "string", "maxLength": 128 },
+        "linkedStudentId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt"]
+    },
+    "AdminDoc": {
+      "title": "AdminDoc",
+      "description": "Marker document for admin authorization",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "addedAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Comprehensive student profile",
+      "type": "object",
+      "properties": {
+        "studentNumber": { "type": "string", "maxLength": 32, "pattern": "^FRQ-[0-9]{4}-[0-9]{4}$" },
+        "fullName": { "type": "string", "maxLength": 128 },
+        "gender": { "type": "string", "enum": ["male", "female"] },
+        "birthDate": { "type": "string", "maxLength": 32 },
+        "academicGrade": { "type": "string", "maxLength": 64 },
+        "nationalId": { "type": "string", "maxLength": 32 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "address": { "type": "string", "maxLength": 256 },
+        "circleId": { "type": "string", "maxLength": 128 },
+        "circleName": { "type": "string", "maxLength": 128 },
+        "program": { "type": "string", "maxLength": 64 },
+        "guardianName": { "type": "string", "maxLength": 128 },
+        "guardianPhone": { "type": "string", "maxLength": 32 },
+        "guardianRelation": { "type": "string", "maxLength": 64 },
+        "guardianEmail": { "type": "string", "maxLength": 128 },
+        "guardianJob": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["active", "archived", "suspended"] },
+        "totalPoints": { "type": "number" },
+        "currentSurah": { "type": "string", "maxLength": 64 },
+        "completedJuz": { "type": "number" },
+        "feeBalance": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "avatarUrl": { "type": "string", "maxLength": 500 },
+        "registeredAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["studentNumber", "fullName", "guardianName", "guardianPhone", "status", "registeredAt"]
+    },
+    "Circle": {
+      "title": "Circle",
+      "description": "Quran study circle",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 128 },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "teacherName": { "type": "string", "maxLength": 128 },
+        "program": { "type": "string", "maxLength": 64 },
+        "timing": { "type": "string", "maxLength": 64 },
+        "location": { "type": "string", "maxLength": 128 },
+        "capacity": { "type": "number" },
+        "studentCount": { "type": "number" },
+        "days": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "teacherName", "program", "timing", "status"]
+    },
+    "Registration": {
+      "title": "Registration",
+      "description": "Mosque registration application",
+      "type": "object",
+      "properties": {
+        "studentFullName": { "type": "string", "maxLength": 128 },
+        "birthDate": { "type": "string", "maxLength": 32 },
+        "academicGrade": { "type": "string", "maxLength": 64 },
+        "nationalId": { "type": "string", "maxLength": 32 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "address": { "type": "string", "maxLength": 256 },
+        "program": { "type": "string", "maxLength": 64 },
+        "preferredCircleId": { "type": "string", "maxLength": 128 },
+        "guardianName": { "type": "string", "maxLength": 128 },
+        "guardianPhone": { "type": "string", "maxLength": 32 },
+        "guardianRelation": { "type": "string", "maxLength": 64 },
+        "guardianEmail": { "type": "string", "maxLength": 128 },
+        "guardianJob": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "waitlist"] },
+        "decisionNotes": { "type": "string", "maxLength": 500 },
+        "submittedAt": { "type": "string" },
+        "decidedAt": { "type": "string" },
+        "decidedBy": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["studentFullName", "guardianName", "guardianPhone", "program", "status", "submittedAt"]
+    },
+    "MemorizationRecord": {
+      "title": "MemorizationRecord",
+      "description": "Quran recitation and memorization session record",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 128 },
+        "circleId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "type": { "type": "string", "enum": ["new_memorization", "near_review", "far_review", "recitation"] },
+        "surahName": { "type": "string", "maxLength": 64 },
+        "surahNumber": { "type": "number" },
+        "fromAyah": { "type": "number" },
+        "toAyah": { "type": "number" },
+        "pagesCount": { "type": "number" },
+        "masteryScore": { "type": "number" },
+        "tajweedScore": { "type": "number" },
+        "grade": { "type": "string", "enum": ["excellent", "very_good", "good", "acceptable", "needs_repeat"] },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "teacherName": { "type": "string", "maxLength": 128 },
+        "teacherNotes": { "type": "string", "maxLength": 500 },
+        "nextAssignment": { "type": "string", "maxLength": 500 },
+        "pointsAwarded": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["studentId", "date", "type", "surahName", "masteryScore", "grade", "createdAt"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Daily attendance status record",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 128 },
+        "circleId": { "type": "string", "maxLength": 128 },
+        "circleName": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "enum": ["present", "absent", "late", "excused"] },
+        "lateMinutes": { "type": "number" },
+        "excuseReason": { "type": "string", "maxLength": 300 },
+        "markedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["studentId", "date", "status", "createdAt"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Financial transaction and payment receipt",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentNumber": { "type": "string", "maxLength": 32 },
+        "studentName": { "type": "string", "maxLength": 128 },
+        "receiptNumber": { "type": "string", "maxLength": 32, "pattern": "^REC-[0-9]{4}-[0-9]{4}$" },
+        "type": { "type": "string", "enum": ["registration_fee", "monthly_tuition", "semester_tuition", "books_supplies", "activity_fee", "donation", "other"] },
+        "totalAmount": { "type": "number" },
+        "discountAmount": { "type": "number" },
+        "discountReason": { "type": "string", "maxLength": 200 },
+        "paidAmount": { "type": "number" },
+        "remainingBalance": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bank_transfer", "card", "mada", "other"] },
+        "notes": { "type": "string", "maxLength": 500 },
+        "collectedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["studentId", "receiptNumber", "type", "paidAmount", "paymentMethod", "createdAt"]
+    },
+    "PointRecord": {
+      "title": "PointRecord",
+      "description": "Reward and conduct points transaction",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["add", "deduct"] },
+        "points": { "type": "number" },
+        "ruleId": { "type": "string", "maxLength": 64 },
+        "reason": { "type": "string", "maxLength": 256 },
+        "eventKey": { "type": "string", "maxLength": 128 },
+        "awardedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["studentId", "type", "points", "reason", "eventKey", "createdAt"]
+    },
+    "StudentFile": {
+      "title": "StudentFile",
+      "description": "Uploaded student document or certificate metadata",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 128 },
+        "fileName": { "type": "string", "maxLength": 256 },
+        "category": { "type": "string", "enum": ["certificate", "id_document", "medical", "pledge_agreement", "exam_sheet", "photo", "other"] },
+        "description": { "type": "string", "maxLength": 500 },
+        "fileSize": { "type": "number" },
+        "mimeType": { "type": "string", "maxLength": 128 },
+        "downloadUrl": { "type": "string" },
+        "uploadedBy": { "type": "string", "maxLength": 128 },
+        "uploaderName": { "type": "string", "maxLength": 128 },
+        "isArchived": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["studentId", "fileName", "category", "downloadUrl", "uploadedBy", "createdAt"]
+    },
+    "SystemSetting": {
+      "title": "SystemSetting",
+      "description": "Global center settings, point rules, and fees",
+      "type": "object",
+      "properties": {
+        "mosqueName": { "type": "string", "maxLength": 128 },
+        "centerName": { "type": "string", "maxLength": 128 },
+        "currency": { "type": "string", "maxLength": 16 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "email": { "type": "string", "maxLength": 128 },
+        "address": { "type": "string", "maxLength": 256 },
+        "pointRules": { "type": "string" },
+        "feePlans": { "type": "string" },
+        "academicYear": { "type": "string", "maxLength": 32 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["mosqueName", "currency"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "System audit trail for operations",
+      "type": "object",
+      "properties": {
+        "action": { "type": "string", "maxLength": 64 },
+        "category": { "type": "string", "maxLength": 64 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "performedBy": { "type": "string", "maxLength": 128 },
+        "userEmail": { "type": "string", "maxLength": 128 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["action", "category", "performedBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "User" },
+      "description": "User profiles with their assigned roles and circle or student linkage"
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "AdminDoc" },
+      "description": "Collection of trusted administrators for fast Firestore rule checking"
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "Student" },
+      "description": "Comprehensive student records with unique FRQ student numbers"
+    },
+    "/circles/{circleId}": {
+      "schema": { "$ref": "Circle" },
+      "description": "Quran study and memorization circles"
+    },
+    "/registrations/{registrationId}": {
+      "schema": { "$ref": "Registration" },
+      "description": "Applications submitted to enroll in mosque circles"
+    },
+    "/memorization_records/{recordId}": {
+      "schema": { "$ref": "MemorizationRecord" },
+      "description": "Daily recitation, new memorization and revision records"
+    },
+    "/attendance_records/{attendanceId}": {
+      "schema": { "$ref": "AttendanceRecord" },
+      "description": "Daily circle attendance and absence logs"
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "PaymentRecord" },
+      "description": "Fee payments, discounts, exemptions, and generated receipts"
+    },
+    "/points_ledger/{pointId}": {
+      "schema": { "$ref": "PointRecord" },
+      "description": "Reward points ledger with duplicate prevention event keys"
+    },
+    "/student_files/{fileId}": {
+      "schema": { "$ref": "StudentFile" },
+      "description": "Metadata and secure links for uploaded student documents and certificates"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "SystemSetting" },
+      "description": "Global mosque settings, currency, point values and fee structures"
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "AuditLog" },
+      "description": "Audit trails for financial and administrative actions"
+    }
+  }
+}

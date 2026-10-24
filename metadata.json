@@ -1,0 +1,6 @@
+{
+  "name": "نظام الفرقان لإدارة الجامع وحلقات القرآن",
+  "description": "نظام متكامل لإدارة الجامع والطلاب وحلقات تحفيظ القرآن الكريم والحضور والتقييم والمدفوعات والنقاط والملفات والصلاحيات.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
