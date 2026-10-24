@@ -3,8 +3,6 @@ import {
   collection,
   doc,
   onSnapshot,
-  query,
-  orderBy,
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -38,7 +36,7 @@ import {
   updateSystemSettings,
 } from './services/dbService';
 
-import { Navbar } from './components/layout/Navbar';
+import { Navbar, MainRoute } from './components/layout/Navbar';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
 import { DashboardView } from './components/dashboard/DashboardView';
 import { StudentsView } from './components/students/StudentsView';
@@ -60,11 +58,17 @@ import { SettingsView } from './components/settings/SettingsView';
 import { ReportsView } from './components/reports/ReportsView';
 import { PrintableModal } from './components/print/PrintableModal';
 
-function MainApp() {
-  const { currentUser, userProfile, activeRole } = useAuth();
+import { PublicRegistrationHome } from './components/public/PublicRegistrationHome';
+import { StudentPortalView } from './components/portals/StudentPortalView';
+import { TeacherPortalView } from './components/portals/TeacherPortalView';
+import { Shield, AlertCircle, Sparkles } from 'lucide-react';
 
-  // Navigation
-  const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
+function MainApp() {
+  const { currentUser, userProfile, activeRole, setActiveRole } = useAuth();
+
+  // Route: 'home' (الصفحة الرئيسية للتسجيل), 'admin' (إدارة), 'teacher', 'student'
+  const [currentRoute, setCurrentRoute] = useState<MainRoute>('home');
+  const [adminTab, setAdminTab] = useState<NavTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Firestore Real-Time Data Collections
@@ -101,9 +105,37 @@ function MainApp() {
   const [printablePayment, setPrintablePayment] = useState<PaymentRecord | null>(null);
   const [printableCertDetails, setPrintableCertDetails] = useState<any>(null);
 
+  // Sync route with window.location.hash for GitHub Pages support
+  useEffect(() => {
+    const parseHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#/admin' || hash === '#admin') {
+        setCurrentRoute('admin');
+      } else if (hash === '#/teacher' || hash === '#teacher') {
+        setCurrentRoute('teacher');
+      } else if (hash === '#/student' || hash === '#student') {
+        setCurrentRoute('student');
+      } else {
+        setCurrentRoute('home');
+      }
+    };
+
+    parseHash();
+    window.addEventListener('hashchange', parseHash);
+    return () => window.removeEventListener('hashchange', parseHash);
+  }, []);
+
+  const navigateToRoute = (route: MainRoute) => {
+    setCurrentRoute(route);
+    if (route === 'home') {
+      window.location.hash = '#/';
+    } else {
+      window.location.hash = `#/${route}`;
+    }
+  };
+
   // Subscriptions to Cloud Firestore
   useEffect(() => {
-    // 1. Students
     const unsubStudents = onSnapshot(
       collection(db, 'students'),
       (snap) => {
@@ -114,7 +146,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'students')
     );
 
-    // 2. Circles
     const unsubCircles = onSnapshot(
       collection(db, 'circles'),
       (snap) => {
@@ -125,7 +156,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'circles')
     );
 
-    // 3. Registrations
     const unsubRegs = onSnapshot(
       collection(db, 'registrations'),
       (snap) => {
@@ -136,7 +166,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'registrations')
     );
 
-    // 4. Memorization
     const unsubMem = onSnapshot(
       collection(db, 'memorization_records'),
       (snap) => {
@@ -147,7 +176,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'memorization_records')
     );
 
-    // 5. Attendance
     const unsubAtt = onSnapshot(
       collection(db, 'attendance_records'),
       (snap) => {
@@ -158,7 +186,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'attendance_records')
     );
 
-    // 6. Payments
     const unsubPay = onSnapshot(
       collection(db, 'payments'),
       (snap) => {
@@ -169,7 +196,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'payments')
     );
 
-    // 7. Points Ledger
     const unsubPts = onSnapshot(
       collection(db, 'points_ledger'),
       (snap) => {
@@ -180,7 +206,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'points_ledger')
     );
 
-    // 8. Student Files
     const unsubFiles = onSnapshot(
       collection(db, 'student_files'),
       (snap) => {
@@ -191,7 +216,6 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'student_files')
     );
 
-    // 9. Settings
     const unsubSettings = onSnapshot(
       doc(db, 'settings', 'general'),
       (snap) => {
@@ -202,13 +226,11 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.GET, 'settings/general')
     );
 
-    // 10. Audit Logs
     const unsubAudit = onSnapshot(
       collection(db, 'audit_logs'),
       (snap) => {
         const list: AuditLog[] = [];
         snap.forEach((d) => list.push({ ...d.data(), id: d.id } as AuditLog));
-        // Sort descending by date
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setAuditLogs(list);
       },
@@ -259,176 +281,261 @@ function MainApp() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* Top Navbar */}
       <Navbar
+        currentRoute={currentRoute}
+        onNavigateRoute={navigateToRoute}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        onOpenRegisterModal={() => setNewRegModalOpen(true)}
         pendingCount={pendingRegsCount}
       />
 
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
-        {/* Sidebar */}
-        <Sidebar
-          currentTab={currentTab}
-          onSelectTab={setCurrentTab}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          pendingRegistrationsCount={pendingRegsCount}
-        />
-
-        {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
-          {currentTab === 'dashboard' && (
-            <DashboardView
-              students={students}
-              circles={circles}
-              memorizationRecords={memorizationRecords}
-              attendanceRecords={attendanceRecords}
-              payments={payments}
-              pointsLedger={pointsLedger}
-              registrations={registrations}
-              currency={currency}
-              onNavigate={setCurrentTab}
-              onOpenAddStudent={() => {
-                setStudentToEdit(null);
-                setAddStudentOpen(true);
-              }}
-              onOpenAddMemorization={() => {
-                setSelectedStudentForMem(null);
-                setAddMemModalOpen(true);
-              }}
-              onOpenAddAttendance={() => setCurrentTab('attendance')}
-              onOpenAddPayment={() => {
-                setSelectedStudentForPay(null);
-                setAddPayModalOpen(true);
-              }}
-              onOpenAwardPoints={() => {
-                setSelectedStudentForPoints(null);
-                setAwardPointsModalOpen(true);
-              }}
-            />
-          )}
-
-          {currentTab === 'students' && (
-            <StudentsView
-              students={students}
-              circles={circles}
-              currency={currency}
-              onOpenAddStudent={() => {
-                setStudentToEdit(null);
-                setAddStudentOpen(true);
-              }}
-              onOpenEditStudent={(st) => {
-                setStudentToEdit(st);
-                setAddStudentOpen(true);
-              }}
-              onViewStudent={(st) => {
-                setSelectedStudentForProfile(st);
-                setProfileModalOpen(true);
-              }}
-              onToggleArchive={archiveStudent}
-              onPrintCard={handlePrintCard}
-            />
-          )}
-
-          {currentTab === 'registrations' && (
-            <RegistrationsView
-              registrations={registrations}
-              circles={circles}
-              onReviewRegistration={reviewRegistration}
-              onOpenNewRegistration={() => setNewRegModalOpen(true)}
-            />
-          )}
-
-          {currentTab === 'circles' && (
-            <CirclesView
-              circles={circles}
-              students={students}
-              onAddCircle={createCircle}
-              onUpdateCircle={updateCircle}
-            />
-          )}
-
-          {currentTab === 'memorization' && (
-            <MemorizationView
-              memorizationRecords={memorizationRecords}
-              students={students}
-              onOpenAddModal={() => {
-                setSelectedStudentForMem(null);
-                setAddMemModalOpen(true);
-              }}
-            />
-          )}
-
-          {currentTab === 'attendance' && (
-            <AttendanceView
-              circles={circles}
-              students={students}
-              attendanceRecords={attendanceRecords}
-              onSaveAttendanceEntry={async (data) => {
-                await recordAttendanceEntry(data);
-              }}
-            />
-          )}
-
-          {currentTab === 'finance' && (
-            <FinanceView
-              payments={payments}
-              students={students}
-              currency={currency}
-              onOpenAddPayment={() => {
-                setSelectedStudentForPay(null);
-                setAddPayModalOpen(true);
-              }}
-              onPrintReceipt={handlePrintReceipt}
-            />
-          )}
-
-          {currentTab === 'points' && (
-            <PointsView
-              pointsLedger={pointsLedger}
-              students={students}
-              onOpenAwardModal={() => {
-                setSelectedStudentForPoints(null);
-                setAwardPointsModalOpen(true);
-              }}
-            />
-          )}
-
-          {currentTab === 'files' && (
-            <FilesView
-              studentFiles={studentFiles}
-              students={students}
-              onOpenUploadModal={() => {
-                setSelectedStudentForFile(null);
-                setUploadFileModalOpen(true);
-              }}
-              onToggleArchive={toggleArchiveFile}
-              onDeleteFile={deleteStudentFile}
-            />
-          )}
-
-          {currentTab === 'reports' && (
-            <ReportsView
-              students={students}
-              circles={circles}
-              payments={payments}
-              memorizationRecords={memorizationRecords}
-              attendanceRecords={attendanceRecords}
-              currency={currency}
-              onPrintCard={handlePrintCard}
-              onPrintCertificate={handlePrintCertificate}
-              onPrintReceipt={handlePrintReceipt}
-            />
-          )}
-
-          {currentTab === 'settings' && (
-            <SettingsView
-              settings={settings}
-              auditLogs={auditLogs}
-              onUpdateSettings={updateSystemSettings}
-            />
-          )}
+      {/* VIEW 1: PUBLIC HOMEPAGE (الصفحة الرئيسية المخصصة للتسجيل) */}
+      {currentRoute === 'home' && (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <PublicRegistrationHome
+            circles={circles}
+            registrations={registrations}
+            onSubmitRegistration={async (data) => {
+              await submitRegistration(data);
+            }}
+            onNavigateToAdmin={() => navigateToRoute('admin')}
+            onNavigateToTeacher={() => navigateToRoute('teacher')}
+            onNavigateToStudent={() => navigateToRoute('student')}
+          />
         </main>
-      </div>
+      )}
+
+      {/* VIEW 2: STUDENT & PARENT PORTAL (بوابة الطالب وولي الأمر فقط) */}
+      {currentRoute === 'student' && (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <StudentPortalView
+            students={students}
+            memorizationRecords={memorizationRecords}
+            attendanceRecords={attendanceRecords}
+            payments={payments}
+            pointsLedger={pointsLedger}
+            studentFiles={studentFiles}
+            currency={currency}
+            onPrintCard={handlePrintCard}
+            onPrintReceipt={handlePrintReceipt}
+          />
+        </main>
+      )}
+
+      {/* VIEW 3: TEACHER PORTAL (بوابة المعلم لحلقاته وطلابه فقط) */}
+      {currentRoute === 'teacher' && (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <TeacherPortalView
+            circles={circles}
+            students={students}
+            memorizationRecords={memorizationRecords}
+            attendanceRecords={attendanceRecords}
+            onOpenAddMemorization={(st) => {
+              setSelectedStudentForMem(st || null);
+              setAddMemModalOpen(true);
+            }}
+            onOpenAttendance={() => {
+              // Direct teacher to attendance view inside admin/attendance or modal
+              navigateToRoute('admin');
+              setAdminTab('attendance');
+            }}
+            onOpenAwardPoints={(st) => {
+              setSelectedStudentForPoints(st || null);
+              setAwardPointsModalOpen(true);
+            }}
+            onViewStudent={(st) => {
+              setSelectedStudentForProfile(st);
+              setProfileModalOpen(true);
+            }}
+          />
+        </main>
+      )}
+
+      {/* VIEW 4: ADMIN PORTAL (رابط منفصل باسم "إدارة" - خاص بالمدير العام والإعدادات) */}
+      {currentRoute === 'admin' && (
+        <div className="flex-1 flex max-w-7xl w-full mx-auto">
+          {/* Admin Sidebar Navigation */}
+          <Sidebar
+            currentTab={adminTab}
+            onSelectTab={setAdminTab}
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            pendingRegistrationsCount={pendingRegsCount}
+          />
+
+          {/* Admin Main Workspace */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
+            {/* Admin Header Notice */}
+            {activeRole !== 'admin' && (
+              <div className="mb-5 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs text-amber-900">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    أنت تتصفح بوابة الإدارة حالياً بصلاحية «{activeRole}». يمكنك تفعيل دور المدير العام لمعاينة كامل الإعدادات والتحكم بالنظام.
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveRole('admin')}
+                  className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold rounded-lg shrink-0 transition-colors"
+                >
+                  التبديل إلى دور المدير
+                </button>
+              </div>
+            )}
+
+            {adminTab === 'dashboard' && (
+              <DashboardView
+                students={students}
+                circles={circles}
+                memorizationRecords={memorizationRecords}
+                attendanceRecords={attendanceRecords}
+                payments={payments}
+                pointsLedger={pointsLedger}
+                registrations={registrations}
+                currency={currency}
+                onNavigate={setAdminTab}
+                onOpenAddStudent={() => {
+                  setStudentToEdit(null);
+                  setAddStudentOpen(true);
+                }}
+                onOpenAddMemorization={() => {
+                  setSelectedStudentForMem(null);
+                  setAddMemModalOpen(true);
+                }}
+                onOpenAddAttendance={() => setAdminTab('attendance')}
+                onOpenAddPayment={() => {
+                  setSelectedStudentForPay(null);
+                  setAddPayModalOpen(true);
+                }}
+                onOpenAwardPoints={() => {
+                  setSelectedStudentForPoints(null);
+                  setAwardPointsModalOpen(true);
+                }}
+              />
+            )}
+
+            {adminTab === 'students' && (
+              <StudentsView
+                students={students}
+                circles={circles}
+                currency={currency}
+                onOpenAddStudent={() => {
+                  setStudentToEdit(null);
+                  setAddStudentOpen(true);
+                }}
+                onOpenEditStudent={(st) => {
+                  setStudentToEdit(st);
+                  setAddStudentOpen(true);
+                }}
+                onViewStudent={(st) => {
+                  setSelectedStudentForProfile(st);
+                  setProfileModalOpen(true);
+                }}
+                onToggleArchive={archiveStudent}
+                onPrintCard={handlePrintCard}
+              />
+            )}
+
+            {adminTab === 'registrations' && (
+              <RegistrationsView
+                registrations={registrations}
+                circles={circles}
+                onReviewRegistration={reviewRegistration}
+                onOpenNewRegistration={() => setNewRegModalOpen(true)}
+              />
+            )}
+
+            {adminTab === 'circles' && (
+              <CirclesView
+                circles={circles}
+                students={students}
+                onAddCircle={createCircle}
+                onUpdateCircle={updateCircle}
+              />
+            )}
+
+            {adminTab === 'memorization' && (
+              <MemorizationView
+                memorizationRecords={memorizationRecords}
+                students={students}
+                onOpenAddModal={() => {
+                  setSelectedStudentForMem(null);
+                  setAddMemModalOpen(true);
+                }}
+              />
+            )}
+
+            {adminTab === 'attendance' && (
+              <AttendanceView
+                circles={circles}
+                students={students}
+                attendanceRecords={attendanceRecords}
+                onSaveAttendanceEntry={async (data) => {
+                  await recordAttendanceEntry(data);
+                }}
+              />
+            )}
+
+            {adminTab === 'finance' && (
+              <FinanceView
+                payments={payments}
+                students={students}
+                currency={currency}
+                onOpenAddPayment={() => {
+                  setSelectedStudentForPay(null);
+                  setAddPayModalOpen(true);
+                }}
+                onPrintReceipt={handlePrintReceipt}
+              />
+            )}
+
+            {adminTab === 'points' && (
+              <PointsView
+                pointsLedger={pointsLedger}
+                students={students}
+                onOpenAwardModal={() => {
+                  setSelectedStudentForPoints(null);
+                  setAwardPointsModalOpen(true);
+                }}
+              />
+            )}
+
+            {adminTab === 'files' && (
+              <FilesView
+                studentFiles={studentFiles}
+                students={students}
+                onOpenUploadModal={() => {
+                  setSelectedStudentForFile(null);
+                  setUploadFileModalOpen(true);
+                }}
+                onToggleArchive={toggleArchiveFile}
+                onDeleteFile={deleteStudentFile}
+              />
+            )}
+
+            {adminTab === 'reports' && (
+              <ReportsView
+                students={students}
+                circles={circles}
+                payments={payments}
+                memorizationRecords={memorizationRecords}
+                attendanceRecords={attendanceRecords}
+                currency={currency}
+                onPrintCard={handlePrintCard}
+                onPrintCertificate={handlePrintCertificate}
+                onPrintReceipt={handlePrintReceipt}
+              />
+            )}
+
+            {/* الإعدادات وسجل التدقيق: تظهر حصرياً فقط في حساب الإدارة كما طلب المستخدم! */}
+            {adminTab === 'settings' && (
+              <SettingsView
+                settings={settings}
+                auditLogs={auditLogs}
+                onUpdateSettings={updateSystemSettings}
+              />
+            )}
+          </main>
+        </div>
+      )}
 
       {/* MODALS */}
       {/* 1. Add / Edit Student Modal */}
