@@ -192,7 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <p className="text-[11px] font-bold text-amber-300">
-                جامع الفرقان المبارك
+                جامع سعيد الجابي
               </p>
             </div>
             <p className="text-[10px] text-emerald-100 leading-relaxed">

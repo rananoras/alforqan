@@ -82,7 +82,7 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-800 font-quran flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-emerald-800" />
-            <span>طلبات التسجيل في جامع الفرقان وحلقات القرآن</span>
+            <span>طلبات التسجيل في جامع سعيد الجابي وحلقات القرآن</span>
           </h2>
           <p className="text-xs text-slate-500">
             مراجعة طلبات الانضمام للجامع، وتخصيص الحلقات، وإصدار أرقام القبول الثابتة
@@ -269,7 +269,7 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
                 </div>
                 <div className="col-span-2">
                   <span className="text-slate-500 block">العنوان:</span>
-                  <span className="text-slate-700">{selectedReg.address || 'حي الفرقان'}</span>
+                  <span className="text-slate-700">{selectedReg.address || 'حي جامع سعيد الجابي'}</span>
                 </div>
               </div>
 

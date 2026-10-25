@@ -28,15 +28,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Form states
   const [mosqueName, setMosqueName] = useState(
-    settings?.mosqueName || 'جامع الفرقان الكبير ومجمع الحلقات القرآنية'
+    settings?.mosqueName || 'جامع سعيد الجابي ومجمع الحلقات القرآنية'
   );
   const [centerName, setCenterName] = useState(
     settings?.centerName || 'إدارة شؤون الحلقات والتعليم القرآني'
   );
   const [currency, setCurrency] = useState(settings?.currency || 'ر.س');
   const [phone, setPhone] = useState(settings?.phone || '+966 50 123 4567');
-  const [email, setEmail] = useState(settings?.email || 'info@alfurqan-mosque.org');
-  const [address, setAddress] = useState(settings?.address || 'حي الفرقان - الشارع العام');
+  const [email, setEmail] = useState(settings?.email || 'info@saeed-aljabi.org');
+  const [address, setAddress] = useState(settings?.address || 'حي جامع سعيد الجابي - الشارع العام');
   const [academicYear, setAcademicYear] = useState(settings?.academicYear || '1447-1448هـ / 2026م');
 
   // Point rules custom state

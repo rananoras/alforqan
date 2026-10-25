@@ -91,7 +91,7 @@ export const StudentsView: React.FC<StudentsViewProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `طلاب_جامع_الفرقان_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `طلاب_جامع_سعيد_الجابي_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -104,7 +104,7 @@ export const StudentsView: React.FC<StudentsViewProps> = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-800 font-quran flex items-center gap-2">
             <Users className="w-5 h-5 text-emerald-800" />
-            <span>سجلات طلاب جامع الفرقان وحلقات التحفيظ</span>
+            <span>سجلات طلاب جامع سعيد الجابي وحلقات التحفيظ</span>
           </h2>
           <p className="text-xs text-slate-500">
             إدارة أرقام الطلاب الثابتة، السجلات الشاملة، الحلقات، والمدفوعات والنقاط

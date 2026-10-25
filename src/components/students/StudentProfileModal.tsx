@@ -319,7 +319,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="text-slate-500">عنوان السكن:</span>
-                      <span className="text-slate-800">{student.address || 'حي الفرقان'}</span>
+                      <span className="text-slate-800">{student.address || 'حي جامع سعيد الجابي'}</span>
                     </div>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         {/* Footer */}
         <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <span className="text-[11px] text-slate-500">
-            تم تسجيل القيد بنظام الفرقان القرآني الموثق
+            تم تسجيل القيد بنظام جامع سعيد الجابي القرآني الموثق
           </span>
           <button
             onClick={onClose}

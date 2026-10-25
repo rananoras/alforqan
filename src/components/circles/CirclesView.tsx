@@ -34,7 +34,7 @@ export const CirclesView: React.FC<CirclesViewProps> = ({
     teacherName: '',
     program: 'حفظ عام وإتقان',
     timing: 'بعد صلاة العصر',
-    location: 'المصلى الرئيسي - جامع الفرقان',
+    location: 'المصلى الرئيسي - جامع سعيد الجابي',
     capacity: 20,
     days: 'الأحد إلى الخميس',
     status: 'active' as 'active' | 'inactive',
@@ -49,7 +49,7 @@ export const CirclesView: React.FC<CirclesViewProps> = ({
       teacherName: '',
       program: 'حفظ عام وإتقان',
       timing: 'بعد صلاة العصر',
-      location: 'المصلى الرئيسي - جامع الفرقان',
+      location: 'المصلى الرئيسي - جامع سعيد الجابي',
       capacity: 20,
       days: 'الأحد إلى الخميس',
       status: 'active',
@@ -265,7 +265,7 @@ export const CirclesView: React.FC<CirclesViewProps> = ({
                   <option value="حفظ عام وتجويد">حفظ عام وتجويد</option>
                   <option value="المسار المكثف للحفاظ">المسار المكثف للحفاظ</option>
                   <option value="برنامج الإتقان والمراجعة">برنامج الإتقان والمراجعة</option>
-                  <option value="براعم الفرقان للتلقين">براعم الفرقان للتلقين</option>
+                  <option value="براعم القرآن للتلقين">براعم القرآن للتلقين</option>
                 </select>
               </div>
 

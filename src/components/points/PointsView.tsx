@@ -57,7 +57,7 @@ export const PointsView: React.FC<PointsViewProps> = ({
     if (points >= 100) {
       return { title: 'الحافظ البرونزي', color: 'bg-amber-800/10 text-amber-900 border-amber-800/20' };
     }
-    return { title: 'براعم الفرقان', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+    return { title: 'براعم القرآن', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
   };
 
   return (
@@ -70,7 +70,7 @@ export const PointsView: React.FC<PointsViewProps> = ({
             <span>نظام نقاط التميز والمكافآت السلوكية والقرآنية</span>
           </h2>
           <p className="text-xs text-slate-500">
-            لوحة شرف حفاظ الفرقان، ومنح النقاط للحفظ والمواظبة والأخلاق، ومنع تكرار الأحداث
+            لوحة شرف حفاظ جامع سعيد الجابي، ومنح النقاط للحفظ والمواظبة والأخلاق، ومنع تكرار الأحداث
           </p>
         </div>
 
@@ -169,7 +169,7 @@ export const PointsView: React.FC<PointsViewProps> = ({
           {/* Full Rank Table */}
           <div className="md:col-span-3 bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-100 font-bold text-xs text-slate-800">
-              ترتيب جميع طلاب حلقات جامع الفرقان
+              ترتيب جميع طلاب حلقات جامع سعيد الجابي
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-right text-xs">

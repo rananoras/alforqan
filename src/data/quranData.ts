@@ -125,7 +125,7 @@ export const DEFAULT_POINT_RULES = [
   { id: 'rule-early-arrival', name: 'حضور مبكر وتكبيرة الإحرام', type: 'add' as const, defaultPoints: 4, description: 'الحضور قبل بدء الحلقة بـ 10 دقائق', category: 'attendance' as const },
   { id: 'rule-regular-att', name: 'حضور يومي منتظم', type: 'add' as const, defaultPoints: 2, description: 'الحضور في الموعد المحدد', category: 'attendance' as const },
   { id: 'rule-good-morals', name: 'خلق وسلوك إسلامي متميز', type: 'add' as const, defaultPoints: 10, description: 'مساعدة الزملاء، احترام المعلم، الأدب', category: 'morals' as const },
-  { id: 'rule-competition-win', name: 'الفوز في مسابقة الفرقان', type: 'add' as const, defaultPoints: 25, description: 'الحصول على مركز متقدم في المسابقات', category: 'competition' as const },
+  { id: 'rule-competition-win', name: 'الفوز في مسابقة جامع سعيد الجابي', type: 'add' as const, defaultPoints: 25, description: 'الحصول على مركز متقدم في المسابقات', category: 'competition' as const },
   { id: 'rule-unexcused-absent', name: 'غياب بدون عذر مقبول', type: 'deduct' as const, defaultPoints: 5, description: 'الغياب عن الحلقة دون إشعار مسبق', category: 'discipline' as const },
   { id: 'rule-tardiness', name: 'تأخر متكرر عن الحلقة', type: 'deduct' as const, defaultPoints: 2, description: 'التأخر أكثر من 15 دقيقة', category: 'discipline' as const },
 ];

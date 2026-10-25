@@ -295,7 +295,7 @@ export const AddEditStudentModal: React.FC<AddEditStudentModalProps> = ({
                   <option value="حفظ عام وتجويد">حفظ عام وتجويد</option>
                   <option value="المسار المكثف للحفاظ">المسار المكثف للحفاظ</option>
                   <option value="برنامج الإتقان والمراجعة">برنامج الإتقان والمراجعة</option>
-                  <option value="براعم الفرقان للتلقين">براعم الفرقان للتلقين</option>
+                  <option value="براعم القرآن للتلقين">براعم القرآن للتلقين</option>
                   <option value="تأهيل المسابقات القرآنية">تأهيل المسابقات القرآنية</option>
                 </select>
               </div>

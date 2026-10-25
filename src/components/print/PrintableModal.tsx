@@ -24,7 +24,7 @@ export const PrintableModal: React.FC<PrintableModalProps> = ({
   student,
   payment,
   certificateData,
-  mosqueName = 'جامع الفرقان الكبير ومجمع الحلقات القرآنية',
+  mosqueName = 'جامع سعيد الجابي ومجمع الحلقات القرآنية',
   currency = 'ر.س',
 }) => {
   if (!isOpen) return null;
@@ -80,7 +80,7 @@ export const PrintableModal: React.FC<PrintableModalProps> = ({
                   </div>
                   <div>
                     <h3 className="font-bold text-xs text-emerald-950 font-quran">
-                      جامع الفرقان المبارك
+                      جامع سعيد الجابي المبارك
                     </h3>
                     <p className="text-[10px] text-emerald-700">مجمع حلقات تحفيظ القرآن الكريم</p>
                   </div>
@@ -156,7 +156,7 @@ export const PrintableModal: React.FC<PrintableModalProps> = ({
               <div className="flex items-center justify-between border-b-2 border-emerald-900 pb-3 mb-4">
                 <div>
                   <h3 className="font-bold text-sm text-emerald-950 font-quran">
-                    جامع الفرقان ومجمع الحلقات
+                    جامع سعيد الجابي ومجمع الحلقات
                   </h3>
                   <p className="text-[10px] text-emerald-700">قسم الشؤون المالية والإيرادات</p>
                 </div>
@@ -251,7 +251,7 @@ export const PrintableModal: React.FC<PrintableModalProps> = ({
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BookOpen className="w-6 h-6 text-emerald-800" />
                 <h4 className="font-quran text-emerald-950 font-bold text-sm">
-                  المملكة العربية السعودية • جامع الفرقان الكبير
+                  المملكة العربية السعودية • جامع سعيد الجابي
                 </h4>
               </div>
               <p className="text-[11px] text-slate-500 mb-4">مجمع حلقات تحفيظ القرآن الكريم والتربية الإيمانية</p>
@@ -261,7 +261,7 @@ export const PrintableModal: React.FC<PrintableModalProps> = ({
               </h2>
 
               <p className="text-xs text-slate-700 leading-relaxed max-w-md mx-auto my-3">
-                يسر إدارة مجمع حلقات جامع الفرقان أن تشهد بأن الطالب النجيب:
+                يسر إدارة مجمع حلقات جامع سعيد الجابي أن تشهد بأن الطالب النجيب:
               </p>
 
               <div className="my-2 py-1.5 px-6 bg-emerald-50 rounded-xl border border-emerald-200 inline-block">

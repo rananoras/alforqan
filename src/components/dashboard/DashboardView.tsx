@@ -109,7 +109,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </span>
             </div>
             <h2 className="text-xl md:text-2xl font-bold font-quran text-amber-300">
-              جامع الفرقان ومجمع حلقات تحفيظ القرآن الكريم
+              جامع سعيد الجابي ومجمع حلقات تحفيظ القرآن الكريم
             </h2>
             <p className="text-xs md:text-sm text-emerald-100 max-w-2xl mt-1">
               متابعة شؤون الطلاب، وتسميع القرآن الكريم، ونظام الحضور والغياب، والمدفوعات الإلكترونية، ونقاط التميز السلوكي والحفظي.

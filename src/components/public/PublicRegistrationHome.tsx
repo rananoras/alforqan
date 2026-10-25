@@ -46,7 +46,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
     academicGrade: 'الصف الرابع الابتدائي',
     nationalId: '',
     phone: '',
-    address: 'حي الفرقان',
+    address: 'حي جامع سعيد الجابي',
     program: 'حفظ عام وتجويد',
     preferredCircleId: '',
     guardianName: '',
@@ -85,7 +85,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
         academicGrade: 'الصف الرابع الابتدائي',
         nationalId: '',
         phone: '',
-        address: 'حي الفرقان',
+        address: 'حي جامع سعيد الجابي',
         program: 'حفظ عام وتجويد',
         preferredCircleId: '',
         guardianName: '',
@@ -130,7 +130,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
           </div>
 
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold font-quran text-amber-300 leading-tight">
-            جامع الفرقان المبارك
+            جامع سعيد الجابي
             <br />
             <span className="text-white text-xl sm:text-3xl font-normal block mt-1">
               مجمع حلقات تحفيظ القرآن الكريم والتعليم الإيماني
@@ -204,7 +204,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
           <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-3">
             <Sparkles className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-sm text-slate-800">براعم الفرقان للتلقين</h3>
+          <h3 className="font-bold text-sm text-slate-800">براعم القرآن للتلقين</h3>
           <p className="text-xs text-slate-500 mt-1">
             تأسيس أطفال الروضة والمرحلة الابتدائية الأولى على حفظ جزء عم والأذكار والآداب.
           </p>
@@ -231,7 +231,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
                 <UserPlus className="w-5 h-5" />
               </span>
               <h2 className="text-lg sm:text-xl font-bold font-quran text-slate-800">
-                استمارة التسجيل والالتحاق بحلقات جامع الفرقان
+                استمارة التسجيل والالتحاق بحلقات جامع سعيد الجابي
               </h2>
             </div>
             <p className="text-xs text-slate-500">
@@ -248,7 +248,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
                 تم استلام طلب التسجيل بنجاح!
               </h3>
               <p className="text-xs text-slate-700 max-w-md mx-auto leading-relaxed">
-                شكراً لكم. تم إرسال طلب تسجيل الطالب <strong className="text-emerald-900">{submittedStudentName}</strong> إلى إدارة جامع الفرقان. يجري مراجعة الطلب من لجنة القبول وتعيين الحلقة المناسبة، وسيتم إشعاركم عبر واتساب.
+                شكراً لكم. تم إرسال طلب تسجيل الطالب <strong className="text-emerald-900">{submittedStudentName}</strong> إلى إدارة جامع سعيد الجابي. يجري مراجعة الطلب من لجنة القبول وتعيين الحلقة المناسبة، وسيتم إشعاركم عبر واتساب.
               </p>
               <button
                 onClick={() => setSubmittedSuccess(false)}
@@ -340,7 +340,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
                       <option value="حفظ عام وتجويد">حفظ عام وتجويد</option>
                       <option value="المسار المكثف للحفاظ">المسار المكثف للحفاظ</option>
                       <option value="برنامج الإتقان والمراجعة">برنامج الإتقان والمراجعة</option>
-                      <option value="براعم الفرقان للتلقين">براعم الفرقان للتلقين</option>
+                      <option value="براعم القرآن للتلقين">براعم القرآن للتلقين</option>
                     </select>
                   </div>
                 </div>
@@ -516,7 +516,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
             </div>
 
             <div className="mt-4 pt-3 border-t border-emerald-800/80 flex items-center justify-between text-[11px] text-emerald-200">
-              <span>حي الفرقان - الشارع العام</span>
+              <span>حي جامع سعيد الجابي - الشارع العام</span>
               <span className="font-mono">+966 50 123 4567</span>
             </div>
           </div>

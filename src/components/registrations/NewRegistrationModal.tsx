@@ -21,7 +21,7 @@ export const NewRegistrationModal: React.FC<NewRegistrationModalProps> = ({
     academicGrade: 'الصف الرابع الابتدائي',
     nationalId: '',
     phone: '',
-    address: 'حي الفرقان',
+    address: 'حي جامع سعيد الجابي',
     program: 'حفظ عام وتجويد',
     preferredCircleId: '',
     guardianName: '',
@@ -68,7 +68,7 @@ export const NewRegistrationModal: React.FC<NewRegistrationModalProps> = ({
           <div className="flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-amber-300" />
             <h3 className="font-bold text-sm sm:text-base font-quran">
-              استمارة الالتحاق بحلقات تحفيظ جامع الفرقان
+              استمارة الالتحاق بحلقات تحفيظ جامع سعيد الجابي
             </h3>
           </div>
           <button onClick={handleResetAndClose} className="p-1 rounded-lg text-emerald-200 hover:text-white">
@@ -83,7 +83,7 @@ export const NewRegistrationModal: React.FC<NewRegistrationModalProps> = ({
             </div>
             <h4 className="text-lg font-bold text-slate-800">تم استلام طلب التسجيل بنجاح!</h4>
             <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-              تم إرسال طلب الطالب <span className="font-bold text-emerald-800">{formData.studentFullName}</span> إلى إدارة جامع الفرقان. سيتم مراجعة الطلب وتعيين الحلقة وإصدار الرقم الأكاديمي والتواصل معكم عبر واتساب.
+              تم إرسال طلب الطالب <span className="font-bold text-emerald-800">{formData.studentFullName}</span> إلى إدارة جامع سعيد الجابي. سيتم مراجعة الطلب وتعيين الحلقة وإصدار الرقم الأكاديمي والتواصل معكم عبر واتساب.
             </p>
             <div className="pt-4">
               <button
@@ -160,7 +160,7 @@ export const NewRegistrationModal: React.FC<NewRegistrationModalProps> = ({
                     <option value="حفظ عام وتجويد">حفظ عام وتجويد</option>
                     <option value="المسار المكثف للحفاظ">المسار المكثف للحفاظ</option>
                     <option value="برنامج الإتقان والمراجعة">برنامج الإتقان والمراجعة</option>
-                    <option value="براعم الفرقان للتلقين">براعم الفرقان للتلقين</option>
+                    <option value="براعم القرآن للتلقين">براعم القرآن للتلقين</option>
                   </select>
                 </div>
 

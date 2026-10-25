@@ -27,7 +27,7 @@ export interface Student {
   address?: string;
   circleId?: string;
   circleName?: string;
-  program: string; // حفظ عام، مكثف، إتقان وتجويد، براعم الفرقان، تأهيل مسابقات
+  program: string; // حفظ عام، مكثف، إتقان وتجويد، براعم القرآن، تأهيل مسابقات
   guardianName: string;
   guardianPhone: string;
   guardianRelation: string; // أب، أم، أخ، ولي أمر

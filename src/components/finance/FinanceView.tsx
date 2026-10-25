@@ -83,7 +83,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `التقرير_المالي_جامع_الفرقان_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `التقرير_المالي_جامع_سعيد_الجابي_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
