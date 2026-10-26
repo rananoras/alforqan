@@ -61,12 +61,15 @@ import { PrintableModal } from './components/print/PrintableModal';
 import { PublicRegistrationHome } from './components/public/PublicRegistrationHome';
 import { StudentPortalView } from './components/portals/StudentPortalView';
 import { TeacherPortalView } from './components/portals/TeacherPortalView';
+import { ParentPortalView } from './components/portals/ParentPortalView';
+import { AccountantPortalView } from './components/portals/AccountantPortalView';
+import { StaffPortalView } from './components/portals/StaffPortalView';
 import { Shield, AlertCircle, Sparkles } from 'lucide-react';
 
 function MainApp() {
   const { currentUser, userProfile, activeRole, setActiveRole } = useAuth();
 
-  // Route: 'home' (الصفحة الرئيسية للتسجيل), 'admin' (إدارة), 'teacher', 'student'
+  // Route: 'home' (الصفحة الرئيسية للتسجيل), 'admin' (إدارة), 'teacher', 'student', 'parent', 'accountant', 'staff'
   const [currentRoute, setCurrentRoute] = useState<MainRoute>('home');
   const [adminTab, setAdminTab] = useState<NavTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -105,24 +108,40 @@ function MainApp() {
   const [printablePayment, setPrintablePayment] = useState<PaymentRecord | null>(null);
   const [printableCertDetails, setPrintableCertDetails] = useState<any>(null);
 
-  // Sync route with window.location.hash for GitHub Pages support
+  // Sync route with window.location.hash and pathname for GitHub Pages & direct routes
   useEffect(() => {
-    const parseHash = () => {
+    const parseCurrentRoute = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash === '#/admin' || hash === '#admin') {
+      const path = window.location.pathname.toLowerCase();
+      const searchParams = new URLSearchParams(window.location.search);
+      const queryParam = (searchParams.get('p') || '').toLowerCase();
+
+      const combined = `${hash} ${path} ${queryParam}`;
+
+      if (combined.includes('admin')) {
         setCurrentRoute('admin');
-      } else if (hash === '#/teacher' || hash === '#teacher') {
+      } else if (combined.includes('teacher')) {
         setCurrentRoute('teacher');
-      } else if (hash === '#/student' || hash === '#student') {
+      } else if (combined.includes('student')) {
         setCurrentRoute('student');
+      } else if (combined.includes('parent')) {
+        setCurrentRoute('parent');
+      } else if (combined.includes('accountant')) {
+        setCurrentRoute('accountant');
+      } else if (combined.includes('staff')) {
+        setCurrentRoute('staff');
       } else {
         setCurrentRoute('home');
       }
     };
 
-    parseHash();
-    window.addEventListener('hashchange', parseHash);
-    return () => window.removeEventListener('hashchange', parseHash);
+    parseCurrentRoute();
+    window.addEventListener('hashchange', parseCurrentRoute);
+    window.addEventListener('popstate', parseCurrentRoute);
+    return () => {
+      window.removeEventListener('hashchange', parseCurrentRoute);
+      window.removeEventListener('popstate', parseCurrentRoute);
+    };
   }, []);
 
   const navigateToRoute = (route: MainRoute) => {
@@ -132,6 +151,7 @@ function MainApp() {
     } else {
       window.location.hash = `#/${route}`;
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Subscriptions to Cloud Firestore
@@ -349,7 +369,71 @@ function MainApp() {
         </main>
       )}
 
-      {/* VIEW 4: ADMIN PORTAL (رابط منفصل باسم "إدارة" - خاص بالمدير العام والإعدادات) */}
+      {/* VIEW 4: PARENT PORTAL (بوابة ولي الأمر لمتابعة الأبناء - رابط منفرد /parent) */}
+      {currentRoute === 'parent' && (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <ParentPortalView
+            students={students}
+            memorizationRecords={memorizationRecords}
+            attendanceRecords={attendanceRecords}
+            payments={payments}
+            pointsLedger={pointsLedger}
+            studentFiles={studentFiles}
+            currency={currency}
+            onPrintCard={handlePrintCard}
+            onPrintReceipt={handlePrintReceipt}
+          />
+        </main>
+      )}
+
+      {/* VIEW 5: ACCOUNTANT PORTAL (بوابة المحاسب المالي وسندات القبض - رابط منفرد /accountant) */}
+      {currentRoute === 'accountant' && (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <AccountantPortalView
+            payments={payments}
+            students={students}
+            currency={currency}
+            onOpenAddPayment={(st) => {
+              setSelectedStudentForPay(st || null);
+              setAddPayModalOpen(true);
+            }}
+            onPrintReceipt={handlePrintReceipt}
+          />
+        </main>
+      )}
+
+      {/* VIEW 6: STAFF PORTAL (بوابة شؤون الطلاب والقبول - رابط منفرد /staff) */}
+      {currentRoute === 'staff' && (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <StaffPortalView
+            registrations={registrations}
+            students={students}
+            circles={circles}
+            studentFiles={studentFiles}
+            onReviewRegistration={reviewRegistration}
+            onOpenNewRegistration={() => setNewRegModalOpen(true)}
+            onOpenAddStudent={() => {
+              setStudentToEdit(null);
+              setAddStudentOpen(true);
+            }}
+            onOpenEditStudent={(st) => {
+              setStudentToEdit(st);
+              setAddStudentOpen(true);
+            }}
+            onViewStudent={(st) => {
+              setSelectedStudentForProfile(st);
+              setProfileModalOpen(true);
+            }}
+            onOpenUploadModal={(st) => {
+              setSelectedStudentForFile(st || null);
+              setUploadFileModalOpen(true);
+            }}
+            onPrintCard={handlePrintCard}
+          />
+        </main>
+      )}
+
+      {/* VIEW 7: ADMIN CONTROL PANEL (لوحة تحكم المدير العام على رابط منفرد /admin) */}
       {currentRoute === 'admin' && (
         <div className="flex-1 flex max-w-7xl w-full mx-auto">
           {/* Admin Sidebar Navigation */}
