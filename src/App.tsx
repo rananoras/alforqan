@@ -313,6 +313,8 @@ function MainApp() {
           <PublicRegistrationHome
             circles={circles}
             registrations={registrations}
+            students={students}
+            memorizationRecords={memorizationRecords}
             onSubmitRegistration={async (data) => {
               await submitRegistration(data);
             }}
