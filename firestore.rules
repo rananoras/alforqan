@@ -2,153 +2,63 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
+    // Registrations collection - Open for student applications & admin review
+    match /registrations/{registrationId} {
+      allow read, write: if true;
     }
 
-    function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email == 'rananoras@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
-    }
-
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-
-    function isStaffOrAdmin() {
-      return isAdmin() || (
-        isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        (getUserRole() == 'admin' || getUserRole() == 'staff')
-      );
-    }
-
-    function isTeacherOrStaffOrAdmin() {
-      return isAdmin() || (
-        isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        (getUserRole() == 'admin' || getUserRole() == 'staff' || getUserRole() == 'teacher')
-      );
-    }
-
-    function isAccountantOrAdmin() {
-      return isAdmin() || (
-        isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        (getUserRole() == 'admin' || getUserRole() == 'accountant')
-      );
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    // Default deny catch-all
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // Test connection doc
-    match /test/{docId} {
-      allow read: if true;
-    }
-
-    // Admins marker collection
-    match /admins/{userId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin() || (
-        isSignedIn() &&
-        request.auth.token.email == 'rananoras@gmail.com' &&
-        request.auth.uid == userId
-      );
-    }
-
-    // Users collection
-    match /users/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && (
-        request.auth.uid == userId || isAdmin()
-      );
-      allow update: if isSignedIn() && (
-        isAdmin() ||
-        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'uid', 'email']))
-      );
-      allow delete: if isAdmin();
-    }
-
-    // Students collection
+    // Students collection - Available for mosque administration, teachers, and student lookup
     match /students/{studentId} {
-      allow read: if isSignedIn();
-      allow create: if isStaffOrAdmin();
-      allow update: if isTeacherOrStaffOrAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // Circles collection
     match /circles/{circleId} {
-      allow read: if isSignedIn();
-      allow write: if isStaffOrAdmin();
-    }
-
-    // Registrations collection
-    match /registrations/{registrationId} {
-      allow create: if true;
-      allow read: if isStaffOrAdmin() || (
-        isSignedIn() &&
-        resource.data.guardianEmail == request.auth.token.email
-      );
-      allow update, delete: if isStaffOrAdmin();
+      allow read, write: if true;
     }
 
     // Quran Memorization records
     match /memorization_records/{recordId} {
-      allow read: if isSignedIn();
-      allow create, update: if isTeacherOrStaffOrAdmin();
-      allow delete: if isStaffOrAdmin();
+      allow read, write: if true;
     }
 
     // Attendance records
     match /attendance_records/{attendanceId} {
-      allow read: if isSignedIn();
-      allow create, update: if isTeacherOrStaffOrAdmin();
-      allow delete: if isStaffOrAdmin();
-    }
-
-    // Payments and financial receipts
-    match /payments/{paymentId} {
-      allow read: if isSignedIn();
-      allow create, update: if isAccountantOrAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // Points and rewards ledger
     match /points_ledger/{pointId} {
-      allow read: if isSignedIn();
-      allow create: if isTeacherOrStaffOrAdmin();
-      allow update, delete: if isStaffOrAdmin();
+      allow read, write: if true;
     }
 
     // Student files metadata
     match /student_files/{fileId} {
-      allow read: if isSignedIn();
-      allow create: if isTeacherOrStaffOrAdmin();
-      allow update, delete: if isStaffOrAdmin();
+      allow read, write: if true;
     }
 
     // Global settings
     match /settings/{settingId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Audit logs
     match /audit_logs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow read, write: if true;
+    }
+
+    // Users and Admins collection
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    match /admins/{userId} {
+      allow read, write: if true;
+    }
+
+    // Default catch-all
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

@@ -3,7 +3,6 @@ import {
   Student,
   MemorizationRecord,
   AttendanceRecord,
-  PaymentRecord,
   PointRecord,
   StudentFile,
 } from '../../types';
@@ -12,7 +11,6 @@ import {
   User,
   BookOpen,
   CalendarCheck,
-  Receipt,
   Award,
   FolderOpen,
   Printer,
@@ -33,12 +31,9 @@ interface StudentProfileModalProps {
   student: Student | null;
   memorizationRecords: MemorizationRecord[];
   attendanceRecords: AttendanceRecord[];
-  payments: PaymentRecord[];
   pointsLedger: PointRecord[];
   studentFiles: StudentFile[];
-  currency?: string;
   onPrintCard: (student: Student) => void;
-  onOpenAddPayment?: (student: Student) => void;
   onOpenAwardPoints?: (student: Student) => void;
   onOpenAddMemorization?: (student: Student) => void;
 }
@@ -49,17 +44,14 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   student,
   memorizationRecords,
   attendanceRecords,
-  payments,
   pointsLedger,
   studentFiles,
-  currency = 'ر.س',
   onPrintCard,
-  onOpenAddPayment,
   onOpenAwardPoints,
   onOpenAddMemorization,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'memorization' | 'attendance' | 'finance' | 'points' | 'files'
+    'overview' | 'memorization' | 'attendance' | 'points' | 'files'
   >('overview');
 
   if (!isOpen || !student) return null;
@@ -67,7 +59,6 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   // Filter records specifically for this student
   const studentMems = memorizationRecords.filter((m) => m.studentId === student.id);
   const studentAtts = attendanceRecords.filter((a) => a.studentId === student.id);
-  const studentPays = payments.filter((p) => p.studentId === student.id);
   const studentPts = pointsLedger.filter((pt) => pt.studentId === student.id);
   const files = studentFiles.filter((f) => f.studentId === student.id);
 
@@ -78,9 +69,6 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   const excusedCount = studentAtts.filter((a) => a.status === 'excused').length;
   const attTotal = studentAtts.length;
   const attRate = attTotal > 0 ? Math.round((presentCount / attTotal) * 100) : 100;
-
-  // Total paid
-  const totalPaid = studentPays.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
@@ -152,9 +140,9 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
               <span className="text-sm font-bold text-amber-300">{student.totalPoints}</span>
             </div>
             <div className="bg-emerald-950/50 p-2 rounded-lg border border-emerald-800">
-              <span className="text-[10px] text-emerald-300 block">الرصيد المالي</span>
-              <span className={`text-sm font-bold ${student.feeBalance > 0 ? 'text-rose-300' : 'text-emerald-300'}`}>
-                {student.feeBalance} {currency}
+              <span className="text-[10px] text-emerald-300 block">الحلقة القرآنية</span>
+              <span className="text-xs font-bold text-amber-300 truncate block">
+                {student.circleName || 'عامة'}
               </span>
             </div>
           </div>
@@ -171,7 +159,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
             }`}
           >
             <User className="w-3.5 h-3.5" />
-            <span>البيانات وولي الأمر</span>
+            <span>البيانات الأكاديمية والتواصل</span>
           </button>
 
           <button
@@ -196,18 +184,6 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
           >
             <CalendarCheck className="w-3.5 h-3.5" />
             <span>الحضور والغياب ({studentAtts.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('finance')}
-            className={`py-3 px-3 border-b-2 font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'finance'
-                ? 'border-emerald-700 text-emerald-900 bg-white'
-                : 'border-transparent text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Receipt className="w-3.5 h-3.5" />
-            <span>المدفوعات والرسوم ({studentPays.length})</span>
           </button>
 
           <button
@@ -283,43 +259,39 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   </div>
                 </div>
 
-                {/* Guardian Details Card */}
+                {/* Student Contact & Location Card */}
                 <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4">
                   <h4 className="text-xs font-bold text-emerald-900 mb-3 flex items-center gap-1.5 border-b border-slate-200 pb-2">
                     <Phone className="w-4 h-4 text-emerald-700" />
-                    بيانات ولي الأمر والاتصال في الطوارئ
+                    بيانات التواصل والسكن
                   </h4>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">اسم ولي الأمر:</span>
-                      <span className="font-semibold text-slate-800">{student.guardianName}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">صلة القرابة:</span>
-                      <span className="text-slate-800">{student.guardianRelation}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">جوال ولي الأمر (واتساب):</span>
+                      <span className="text-slate-500">رقم هاتف الطالب / التواصل:</span>
                       <a
-                        href={`https://wa.me/${student.guardianPhone.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={`tel:${student.phone || student.guardianPhone}`}
                         className="font-mono text-emerald-700 hover:underline font-bold"
                       >
-                        {student.guardianPhone}
+                        {student.phone || student.guardianPhone || 'غير مسجل'}
                       </a>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">البريد الإلكتروني:</span>
-                      <span className="text-slate-800 font-mono">{student.guardianEmail || 'غير مسجل'}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">المهنة:</span>
-                      <span className="text-slate-800">{student.guardianJob || 'غير مسجل'}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
                       <span className="text-slate-500">عنوان السكن:</span>
                       <span className="text-slate-800">{student.address || 'حي جامع سعيد الجابي'}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">الحلقة المقيد بها:</span>
+                      <span className="text-emerald-800 font-bold">{student.circleName || 'عامة'}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">المعلم المشرف:</span>
+                      <span className="text-slate-800 font-medium">معلم الحلقة المعتمد</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-slate-500">حالة الانتظام:</span>
+                      <span className="text-emerald-700 font-bold">
+                        {student.status === 'active' ? 'منتظم ومسجل رسمياً' : 'مؤرشف'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -476,65 +448,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: FINANCE */}
-          {activeTab === 'finance' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800">
-                    السجل المالي وإيصالات القبض (المسدد: {totalPaid} {currency})
-                  </h4>
-                  <p className="text-[11px] text-rose-600 font-semibold">
-                    الرصيد المتبقي المستحق: {student.feeBalance} {currency}
-                  </p>
-                </div>
-                {onOpenAddPayment && (
-                  <button
-                    onClick={() => onOpenAddPayment(student)}
-                    className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5 text-amber-300" />
-                    <span>سند قبض / سداد</span>
-                  </button>
-                )}
-              </div>
 
-              {studentPays.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  لا توجد حركات سداد مسجلة.
-                </div>
-              ) : (
-                <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-right text-xs">
-                    <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
-                      <tr>
-                        <th className="p-3">رقم الإيصال</th>
-                        <th className="p-3">التاريخ</th>
-                        <th className="p-3">النوع</th>
-                        <th className="p-3">المبلغ المسدد</th>
-                        <th className="p-3">طريقة الدفع</th>
-                        <th className="p-3">المستلم</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {studentPays.map((p) => (
-                        <tr key={p.id} className="hover:bg-slate-50">
-                          <td className="p-3 font-mono font-bold text-emerald-800">{p.receiptNumber}</td>
-                          <td className="p-3 text-slate-600">{new Date(p.createdAt).toLocaleDateString('ar-SA')}</td>
-                          <td className="p-3">{p.type}</td>
-                          <td className="p-3 font-bold text-slate-800">
-                            {p.paidAmount} {currency}
-                          </td>
-                          <td className="p-3 text-slate-600">{p.paymentMethod}</td>
-                          <td className="p-3 text-slate-400">{p.collectedBy}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* TAB 5: POINTS */}
           {activeTab === 'points' && (

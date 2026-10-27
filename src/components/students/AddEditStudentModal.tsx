@@ -32,10 +32,10 @@ export const AddEditStudentModal: React.FC<AddEditStudentModalProps> = ({
     program: 'حفظ عام وتجويد',
     guardianName: '',
     guardianPhone: '',
-    guardianRelation: 'أب',
+    guardianRelation: '',
     guardianEmail: '',
     guardianJob: '',
-    feeBalance: 100,
+    feeBalance: 0,
     totalPoints: 20,
     completedJuz: 0,
     notes: '',
@@ -58,12 +58,12 @@ export const AddEditStudentModal: React.FC<AddEditStudentModalProps> = ({
         circleId: studentToEdit.circleId || '',
         circleName: studentToEdit.circleName || '',
         program: studentToEdit.program || 'حفظ عام وتجويد',
-        guardianName: studentToEdit.guardianName || '',
-        guardianPhone: studentToEdit.guardianPhone || '',
-        guardianRelation: studentToEdit.guardianRelation || 'أب',
-        guardianEmail: studentToEdit.guardianEmail || '',
-        guardianJob: studentToEdit.guardianJob || '',
-        feeBalance: studentToEdit.feeBalance ?? 100,
+        guardianName: '',
+        guardianPhone: studentToEdit.phone || '',
+        guardianRelation: '',
+        guardianEmail: '',
+        guardianJob: '',
+        feeBalance: 0,
         totalPoints: studentToEdit.totalPoints ?? 20,
         completedJuz: studentToEdit.completedJuz ?? 0,
         notes: studentToEdit.notes || '',
@@ -83,10 +83,10 @@ export const AddEditStudentModal: React.FC<AddEditStudentModalProps> = ({
         program: 'حفظ عام وتجويد',
         guardianName: '',
         guardianPhone: '',
-        guardianRelation: 'أب',
+        guardianRelation: '',
         guardianEmail: '',
         guardianJob: '',
-        feeBalance: 100,
+        feeBalance: 0,
         totalPoints: 20,
         completedJuz: 0,
         notes: '',
@@ -100,8 +100,8 @@ export const AddEditStudentModal: React.FC<AddEditStudentModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.guardianName.trim() || !formData.guardianPhone.trim()) {
-      setErrorMsg('يرجى تعبئة الحقول الإلزامية (اسم الطالب، اسم ولي الأمر، رقم الهاتف)');
+    if (!formData.fullName.trim()) {
+      setErrorMsg('يرجى كتابة اسم الطالب الكامل');
       return;
     }
 
@@ -113,6 +113,12 @@ export const AddEditStudentModal: React.FC<AddEditStudentModalProps> = ({
       const selectedCircle = circles.find((c) => c.id === formData.circleId);
       const submissionData = {
         ...formData,
+        guardianName: '',
+        guardianPhone: formData.phone.trim(),
+        guardianRelation: '',
+        guardianEmail: '',
+        guardianJob: '',
+        feeBalance: 0,
         circleName: selectedCircle ? selectedCircle.name : formData.circleName,
       };
 
@@ -330,93 +336,22 @@ export const AddEditStudentModal: React.FC<AddEditStudentModalProps> = ({
             </div>
           </div>
 
-          {/* Section 3: Guardian Details */}
+          {/* Section 3: Points & General */}
           <div className="border-b border-slate-100 pb-3">
             <h4 className="text-xs font-bold text-emerald-800 mb-3 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-blue-600" />
-              بيانات ولي الأمر والتواصل
+              نقاط التميز والتحفيز
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  اسم ولي الأمر <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.guardianName}
-                  onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
-                  placeholder="الاسم الثلاثي لولي الأمر"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  صلة القرابة
-                </label>
-                <select
-                  value={formData.guardianRelation}
-                  onChange={(e) => setFormData({ ...formData, guardianRelation: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                >
-                  <option value="أب">أب</option>
-                  <option value="أم">أم</option>
-                  <option value="أخ">أخ</option>
-                  <option value="عم">عم</option>
-                  <option value="خال">خال</option>
-                  <option value="ولي أمر">ولي أمر شرعي</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  رقم جوال ولي الأمر (واتساب) <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.guardianPhone}
-                  onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })}
-                  placeholder="05XXXXXXXX"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  البريد الإلكتروني لولي الأمر
-                </label>
-                <input
-                  type="email"
-                  value={formData.guardianEmail}
-                  onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
-                  placeholder="guardian@example.com"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  مهنة ولي الأمر
-                </label>
-                <input
-                  type="text"
-                  value={formData.guardianJob}
-                  onChange={(e) => setFormData({ ...formData, guardianJob: e.target.value })}
-                  placeholder="مثال: معلم، مهندس، موظف"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  الرصيد المالي المتبقي (ر.س)
+                  رصيد نقاط التميز الافتتاحي
                 </label>
                 <input
                   type="number"
-                  value={formData.feeBalance}
-                  onChange={(e) => setFormData({ ...formData, feeBalance: Number(e.target.value) })}
+                  min="0"
+                  value={formData.totalPoints}
+                  onChange={(e) => setFormData({ ...formData, totalPoints: Number(e.target.value) })}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                 />
               </div>

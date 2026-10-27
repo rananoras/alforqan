@@ -5,7 +5,6 @@ import {
   Circle,
   MemorizationRecord,
   AttendanceRecord,
-  PaymentRecord,
   PointRecord,
   Registration,
 } from '../../types';
@@ -14,7 +13,7 @@ import {
   GraduationCap,
   CalendarCheck,
   BookOpen,
-  Receipt,
+  UserPlus,
   Award,
   Sparkles,
   ArrowUpRight,
@@ -23,7 +22,6 @@ import {
   Star,
   PlusCircle,
   FileText,
-  DollarSign,
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -31,15 +29,12 @@ interface DashboardViewProps {
   circles: Circle[];
   memorizationRecords: MemorizationRecord[];
   attendanceRecords: AttendanceRecord[];
-  payments: PaymentRecord[];
   pointsLedger: PointRecord[];
   registrations: Registration[];
-  currency?: string;
   onNavigate: (tab: any) => void;
   onOpenAddStudent: () => void;
   onOpenAddMemorization: () => void;
   onOpenAddAttendance: () => void;
-  onOpenAddPayment: () => void;
   onOpenAwardPoints: () => void;
 }
 
@@ -48,15 +43,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   circles,
   memorizationRecords,
   attendanceRecords,
-  payments,
   pointsLedger,
   registrations,
-  currency = 'ر.س',
   onNavigate,
   onOpenAddStudent,
   onOpenAddMemorization,
   onOpenAddAttendance,
-  onOpenAddPayment,
   onOpenAwardPoints,
 }) => {
   const { userProfile, activeRole } = useAuth();
@@ -66,10 +58,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const archivedStudents = students.filter((s) => s.status === 'archived');
   const totalCompletedJuz = students.reduce((acc, s) => acc + (s.completedJuz || 0), 0);
   const totalPoints = students.reduce((acc, s) => acc + (s.totalPoints || 0), 0);
-
-  // Financial calculations
-  const totalCollected = payments.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
-  const totalOutstandingBalance = students.reduce((acc, s) => acc + (s.feeBalance || 0), 0);
+  const pendingRegs = registrations.filter((r) => r.status === 'pending');
 
   // Attendance rate today
   const todayStr = new Date().toISOString().split('T')[0];
@@ -79,9 +68,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     todayAttendance.length > 0
       ? Math.round((presentCount / todayAttendance.length) * 100)
       : 96; // Representative initial rate
-
-  // Pending registrations
-  const pendingRegs = registrations.filter((r) => r.status === 'pending');
 
   // Top 5 students by points
   const topStudents = [...students]
@@ -112,7 +98,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               جامع سعيد الجابي ومجمع حلقات تحفيظ القرآن الكريم
             </h2>
             <p className="text-xs md:text-sm text-emerald-100 max-w-2xl mt-1">
-              متابعة شؤون الطلاب، وتسميع القرآن الكريم، ونظام الحضور والغياب، والمدفوعات الإلكترونية، ونقاط التميز السلوكي والحفظي.
+              متابعة شؤون الطلاب، وتسميع القرآن الكريم، ونظام الحضور والغياب، وإدارة الحلقات، ونقاط التميز السلوكي والحفظي.
             </p>
           </div>
 
@@ -206,22 +192,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Collected Fees */}
+        {/* Registration Requests */}
         <div
-          onClick={() => onNavigate('finance')}
+          onClick={() => onNavigate('registrations')}
           className="bg-white p-4 rounded-xl shadow-xs border border-slate-200/80 hover:border-emerald-500 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-slate-500">الرسوم المحصلة</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center group-hover:bg-emerald-700 group-hover:text-white transition-colors">
-              <Receipt className="w-4 h-4" />
+            <span className="text-[11px] font-semibold text-slate-500">طلبات التسجيل</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+              <UserPlus className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl font-bold text-slate-800">
-            {totalCollected.toLocaleString()} <span className="text-xs font-normal">{currency}</span>
-          </div>
-          <div className="text-[10px] text-rose-600 font-medium mt-1">
-            المتبقي: {totalOutstandingBalance.toLocaleString()} {currency}
+          <div className="text-2xl font-bold text-slate-800">{registrations.length}</div>
+          <div className="text-[10px] text-amber-600 font-bold mt-1">
+            {pendingRegs.length} بانتظار الاعتماد
           </div>
         </div>
 
@@ -459,11 +443,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
 
           <button
-            onClick={onOpenAddPayment}
+            onClick={() => onNavigate('registrations')}
             className="p-3 bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 border border-slate-200 rounded-xl text-center transition-all flex flex-col items-center gap-1.5"
           >
-            <DollarSign className="w-5 h-5 text-emerald-700" />
-            <span className="text-xs font-semibold">سند قبض مالي</span>
+            <UserPlus className="w-5 h-5 text-amber-600" />
+            <span className="text-xs font-semibold">طلبات التسجيل</span>
           </button>
 
           <button

@@ -63,11 +63,9 @@ export const StudentsView: React.FC<StudentsViewProps> = ({
       'اسم الطالب',
       'المرحلة الدراسية',
       'الحلقة',
-      'اسم ولي الأمر',
-      'جوال ولي الأمر',
+      'هاتف التواصل',
       'الأجزاء المحفوظة',
       'النقاط',
-      'الرصيد المتبقي',
       'الحالة',
     ];
 
@@ -76,11 +74,9 @@ export const StudentsView: React.FC<StudentsViewProps> = ({
       `"${s.fullName}"`,
       `"${s.academicGrade}"`,
       `"${s.circleName || 'غير مسند'}"`,
-      `"${s.guardianName}"`,
-      s.guardianPhone,
+      s.phone || s.guardianPhone || '',
       s.completedJuz,
       s.totalPoints,
-      s.feeBalance,
       s.status === 'active' ? 'منتظم' : 'مؤرشف',
     ]);
 
@@ -203,10 +199,9 @@ export const StudentsView: React.FC<StudentsViewProps> = ({
                   <th className="p-3.5">الرقم الأكاديمي</th>
                   <th className="p-3.5">اسم الطالب</th>
                   <th className="p-3.5">الحلقة والبرنامج</th>
-                  <th className="p-3.5">ولي الأمر والتواصل</th>
+                  <th className="p-3.5">هاتف التواصل</th>
                   <th className="p-3.5">الأجزاء</th>
                   <th className="p-3.5">النقاط</th>
-                  <th className="p-3.5">الرصيد المالي</th>
                   <th className="p-3.5">الحالة</th>
                   <th className="p-3.5 text-center">الإجراءات</th>
                 </tr>
@@ -235,15 +230,14 @@ export const StudentsView: React.FC<StudentsViewProps> = ({
                       <span className="text-[10px] text-slate-500">{st.program}</span>
                     </td>
 
-                    {/* Guardian */}
+                    {/* Phone */}
                     <td className="p-3.5">
-                      <span className="font-medium text-slate-800 block">{st.guardianName} ({st.guardianRelation})</span>
                       <a
-                        href={`tel:${st.guardianPhone}`}
-                        className="text-[10px] text-emerald-700 font-mono hover:underline flex items-center gap-1"
+                        href={`tel:${st.phone || st.guardianPhone}`}
+                        className="text-xs text-emerald-700 font-mono hover:underline flex items-center gap-1 font-bold"
                       >
-                        <Phone className="w-3 h-3" />
-                        <span>{st.guardianPhone}</span>
+                        <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{st.phone || st.guardianPhone || 'غير مسجل'}</span>
                       </a>
                     </td>
 
@@ -262,17 +256,6 @@ export const StudentsView: React.FC<StudentsViewProps> = ({
                         <Award className="w-3.5 h-3.5 text-amber-500" />
                         <span>{st.totalPoints}</span>
                       </div>
-                    </td>
-
-                    {/* Financial Balance */}
-                    <td className="p-3.5 whitespace-nowrap">
-                      <span
-                        className={`font-bold ${
-                          st.feeBalance > 0 ? 'text-rose-600' : 'text-emerald-700'
-                        }`}
-                      >
-                        {st.feeBalance} {currency}
-                      </span>
                     </td>
 
                     {/* Status */}

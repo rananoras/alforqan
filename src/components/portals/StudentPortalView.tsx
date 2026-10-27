@@ -3,7 +3,6 @@ import {
   Student,
   MemorizationRecord,
   AttendanceRecord,
-  PaymentRecord,
   PointRecord,
   StudentFile,
 } from '../../types';
@@ -11,7 +10,6 @@ import {
   BookOpen,
   User,
   CalendarCheck,
-  Receipt,
   Award,
   FolderOpen,
   Printer,
@@ -27,24 +25,18 @@ interface StudentPortalViewProps {
   students: Student[];
   memorizationRecords: MemorizationRecord[];
   attendanceRecords: AttendanceRecord[];
-  payments: PaymentRecord[];
   pointsLedger: PointRecord[];
   studentFiles: StudentFile[];
-  currency?: string;
   onPrintCard: (student: Student) => void;
-  onPrintReceipt: (payment: PaymentRecord) => void;
 }
 
 export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
   students,
   memorizationRecords,
   attendanceRecords,
-  payments,
   pointsLedger,
   studentFiles,
-  currency = 'ر.س',
   onPrintCard,
-  onPrintReceipt,
 }) => {
   const activeStudents = students.filter((s) => s.status === 'active');
   const [selectedStudentId, setSelectedStudentId] = useState<string>(
@@ -55,7 +47,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
 
   const studentMems = memorizationRecords.filter((m) => m.studentId === student?.id);
   const studentAtts = attendanceRecords.filter((a) => a.studentId === student?.id);
-  const studentPays = payments.filter((p) => p.studentId === student?.id);
   const studentPts = pointsLedger.filter((pt) => pt.studentId === student?.id);
   const files = studentFiles.filter((f) => f.studentId === student?.id);
 
@@ -80,7 +71,7 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
       {/* Student Switcher (If multiple siblings/students) */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <span className="text-[11px] text-slate-500 font-semibold block">بوابة الطالب وولي الأمر</span>
+          <span className="text-[11px] text-slate-500 font-semibold block">بوابة الطالب القرآنية</span>
           <h2 className="text-base sm:text-lg font-bold font-quran text-slate-800">
             ملف متابعة الطالب: {student.fullName}
           </h2>
@@ -159,16 +150,12 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] text-slate-500 font-semibold block">الرصيد المالي المتبقي</span>
-          <span
-            className={`text-2xl font-bold ${
-              student.feeBalance > 0 ? 'text-rose-600' : 'text-emerald-700'
-            }`}
-          >
-            {student.feeBalance} <span className="text-xs font-normal">{currency}</span>
+          <span className="text-[11px] text-slate-500 font-semibold block">الحلقة القرآنية</span>
+          <span className="text-base font-bold text-emerald-800 truncate block mt-1">
+            {student.circleName || 'حلقة الحفظ العام'}
           </span>
           <span className="text-[10px] text-slate-400 block mt-0.5">
-            {student.feeBalance > 0 ? 'مستحق السداد' : 'لا توجد مستحقات'}
+            {student.program}
           </span>
         </div>
       </div>
@@ -279,43 +266,42 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
         </div>
       </div>
 
-      {/* Grid: Payments & Files */}
+      {/* Grid: Points & Files */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tuition & Receipts */}
+        {/* Points & Rewards Ledger */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-5">
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
             <h4 className="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-2 font-quran">
-              <Receipt className="w-4 h-4 text-emerald-800" />
-              <span>إيصالات وسندات القبض المسددة ({studentPays.length})</span>
+              <Award className="w-4 h-4 text-amber-600" />
+              <span>سجل نقاط التميز والمكافآت الممنوحة ({studentPts.length})</span>
             </h4>
           </div>
 
-          {studentPays.length === 0 ? (
-            <p className="text-center py-8 text-slate-400 text-xs">لا توجد إيصالات سداد مسجلة.</p>
+          {studentPts.length === 0 ? (
+            <p className="text-center py-8 text-slate-400 text-xs">لا توجد حركات نقاط مسجلة بعد.</p>
           ) : (
             <div className="space-y-2.5 max-h-72 overflow-y-auto">
-              {studentPays.map((p) => (
+              {studentPts.map((pt) => (
                 <div
-                  key={p.id}
+                  key={pt.id}
                   className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
                 >
                   <div>
-                    <span className="font-mono font-bold text-emerald-900 block">{p.receiptNumber}</span>
+                    <span className="font-bold text-slate-800 block">{pt.reason}</span>
                     <span className="text-[10px] text-slate-400">
-                      {new Date(p.createdAt).toLocaleDateString('ar-SA')} • {p.type}
+                      {new Date(pt.createdAt).toLocaleDateString('ar-SA')} • بواسطة: {pt.awardedBy}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800">
-                      {p.paidAmount} {currency}
-                    </span>
-                    <button
-                      onClick={() => onPrintReceipt(p)}
-                      className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold"
-                      title="طباعة السند"
+                  <div className="flex items-center gap-1 font-bold">
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs ${
+                        pt.type === 'add'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-rose-100 text-rose-800'
+                      }`}
                     >
-                      <Printer className="w-3.5 h-3.5" />
-                    </button>
+                      {pt.type === 'add' ? `+${pt.points}` : `-${pt.points}`} نقطة
+                    </span>
                   </div>
                 </div>
               ))}

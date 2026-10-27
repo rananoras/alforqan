@@ -14,7 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
-export type MainRoute = 'home' | 'admin' | 'teacher' | 'student' | 'parent' | 'accountant' | 'staff';
+export type MainRoute = 'home' | 'admin' | 'teacher' | 'student';
 
 interface NavbarProps {
   currentRoute: MainRoute;

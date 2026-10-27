@@ -22,7 +22,6 @@ export type NavTab =
   | 'circles'
   | 'memorization'
   | 'attendance'
-  | 'finance'
   | 'points'
   | 'files'
   | 'reports'
@@ -83,12 +82,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'attendance',
       label: 'سجل الحضور والغياب',
       icon: <CalendarCheck className="w-5 h-5" />,
-    },
-    {
-      id: 'finance',
-      label: 'المالية والرسوم والإيصالات',
-      icon: <Receipt className="w-5 h-5" />,
-      roles: ['admin', 'staff', 'accountant', 'parent'],
     },
     {
       id: 'points',

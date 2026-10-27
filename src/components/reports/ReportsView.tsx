@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Student, Circle, PaymentRecord, MemorizationRecord, AttendanceRecord } from '../../types';
+import { Student, Circle, MemorizationRecord, AttendanceRecord } from '../../types';
 import {
   Printer,
   FileSpreadsheet,
   Award,
   BookOpen,
   CalendarCheck,
-  Receipt,
   Search,
   Users,
   Eye,
@@ -15,29 +14,23 @@ import {
 interface ReportsViewProps {
   students: Student[];
   circles: Circle[];
-  payments: PaymentRecord[];
   memorizationRecords: MemorizationRecord[];
   attendanceRecords: AttendanceRecord[];
-  currency?: string;
   onPrintCard: (student: Student) => void;
   onPrintCertificate: (student: Student, details: { surahOrJuz: string; grade: string; date: string }) => void;
-  onPrintReceipt: (payment: PaymentRecord) => void;
 }
 
 export const ReportsView: React.FC<ReportsViewProps> = ({
   students,
   circles,
-  payments,
   memorizationRecords,
   attendanceRecords,
-  currency = 'ر.س',
   onPrintCard,
   onPrintCertificate,
-  onPrintReceipt,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCircle, setSelectedCircle] = useState('all');
-  const [activeReportTab, setActiveReportTab] = useState<'cards' | 'certificates' | 'receipts' | 'stats'>('cards');
+  const [activeReportTab, setActiveReportTab] = useState<'cards' | 'certificates'>('cards');
 
   const filteredStudents = students.filter((s) => {
     const matchesSearch =
@@ -96,17 +89,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           <span>شهادات التفوق القرآني</span>
         </button>
 
-        <button
-          onClick={() => setActiveReportTab('receipts')}
-          className={`py-3 px-3 border-b-2 font-bold transition-colors flex items-center gap-1.5 ${
-            activeReportTab === 'receipts'
-              ? 'border-emerald-700 text-emerald-900 font-bold'
-              : 'border-transparent text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Receipt className="w-4 h-4 text-emerald-700" />
-          <span>إيصالات وسندات القبض</span>
-        </button>
+
       </div>
 
       {/* Filters Toolbar */}
@@ -203,45 +186,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         </div>
       )}
 
-      {/* TAB 3: RECEIPTS */}
-      {activeReportTab === 'receipts' && (
-        <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
-          <table className="w-full text-right text-xs">
-            <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
-              <tr>
-                <th className="p-3.5">رقم السند</th>
-                <th className="p-3.5">التاريخ</th>
-                <th className="p-3.5">اسم الطالب</th>
-                <th className="p-3.5">المبلغ المسدد</th>
-                <th className="p-3.5">طريقة الدفع</th>
-                <th className="p-3.5 text-center">الطباعة</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {payments.map((p) => (
-                <tr key={p.id} className="hover:bg-slate-50">
-                  <td className="p-3.5 font-mono font-bold text-emerald-900">{p.receiptNumber}</td>
-                  <td className="p-3.5 text-slate-600">{new Date(p.createdAt).toLocaleDateString('ar-SA')}</td>
-                  <td className="p-3.5 font-bold text-slate-800">{p.studentName}</td>
-                  <td className="p-3.5 font-bold text-emerald-800">
-                    {p.paidAmount} {currency}
-                  </td>
-                  <td className="p-3.5 text-slate-600">{p.paymentMethod}</td>
-                  <td className="p-3.5 text-center">
-                    <button
-                      onClick={() => onPrintReceipt(p)}
-                      className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-bold text-xs inline-flex items-center gap-1"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-amber-700" />
-                      <span>طباعة السند</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+
     </div>
   );
 };

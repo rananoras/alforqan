@@ -12,7 +12,6 @@ import {
   Registration,
   MemorizationRecord,
   AttendanceRecord,
-  PaymentRecord,
   PointRecord,
   StudentFile,
   SystemSetting,
@@ -28,7 +27,6 @@ import {
   reviewRegistration,
   recordMemorization,
   recordAttendanceEntry,
-  createPayment,
   awardPointsManual,
   uploadStudentFileRecord,
   toggleArchiveFile,
@@ -47,8 +45,6 @@ import { NewRegistrationModal } from './components/registrations/NewRegistration
 import { MemorizationView } from './components/memorization/MemorizationView';
 import { AddMemorizationModal } from './components/memorization/AddMemorizationModal';
 import { AttendanceView } from './components/attendance/AttendanceView';
-import { FinanceView } from './components/finance/FinanceView';
-import { AddPaymentModal } from './components/finance/AddPaymentModal';
 import { PointsView } from './components/points/PointsView';
 import { AwardPointsModal } from './components/points/AwardPointsModal';
 import { FilesView } from './components/files/FilesView';
@@ -61,26 +57,30 @@ import { PrintableModal } from './components/print/PrintableModal';
 import { PublicRegistrationHome } from './components/public/PublicRegistrationHome';
 import { StudentPortalView } from './components/portals/StudentPortalView';
 import { TeacherPortalView } from './components/portals/TeacherPortalView';
-import { ParentPortalView } from './components/portals/ParentPortalView';
-import { AccountantPortalView } from './components/portals/AccountantPortalView';
-import { StaffPortalView } from './components/portals/StaffPortalView';
-import { Shield, AlertCircle, Sparkles } from 'lucide-react';
+import { Shield } from 'lucide-react';
+
+const REGISTRATIONS_CACHE_KEY = 'saeed_aljabi_registrations_cache_v2';
 
 function MainApp() {
   const { currentUser, userProfile, activeRole, setActiveRole } = useAuth();
 
-  // Route: 'home' (الصفحة الرئيسية للتسجيل), 'admin' (إدارة), 'teacher', 'student', 'parent', 'accountant', 'staff'
+  // Route: 'home' (الموقع العام والتسجيل), 'admin' (لوحة الإدارة), 'teacher' (بوابة المعلم), 'student' (بوابة الطالب)
   const [currentRoute, setCurrentRoute] = useState<MainRoute>('home');
   const [adminTab, setAdminTab] = useState<NavTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Firestore Real-Time Data Collections
+  // Firestore Real-Time Data Collections with Local Storage Cache Fallback
   const [students, setStudents] = useState<Student[]>([]);
   const [circles, setCircles] = useState<Circle[]>([]);
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>(() => {
+    try {
+      const cached = localStorage.getItem(REGISTRATIONS_CACHE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return [];
+  });
   const [memorizationRecords, setMemorizationRecords] = useState<MemorizationRecord[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [pointsLedger, setPointsLedger] = useState<PointRecord[]>([]);
   const [studentFiles, setStudentFiles] = useState<StudentFile[]>([]);
   const [settings, setSettings] = useState<SystemSetting | null>(null);
@@ -94,8 +94,6 @@ function MainApp() {
   const [newRegModalOpen, setNewRegModalOpen] = useState(false);
   const [addMemModalOpen, setAddMemModalOpen] = useState(false);
   const [selectedStudentForMem, setSelectedStudentForMem] = useState<Student | null>(null);
-  const [addPayModalOpen, setAddPayModalOpen] = useState(false);
-  const [selectedStudentForPay, setSelectedStudentForPay] = useState<Student | null>(null);
   const [awardPointsModalOpen, setAwardPointsModalOpen] = useState(false);
   const [selectedStudentForPoints, setSelectedStudentForPoints] = useState<Student | null>(null);
   const [uploadFileModalOpen, setUploadFileModalOpen] = useState(false);
@@ -105,7 +103,6 @@ function MainApp() {
   const [printableOpen, setPrintableOpen] = useState(false);
   const [printableMode, setPrintableMode] = useState<'card' | 'receipt' | 'certificate'>('card');
   const [printableStudent, setPrintableStudent] = useState<Student | null>(null);
-  const [printablePayment, setPrintablePayment] = useState<PaymentRecord | null>(null);
   const [printableCertDetails, setPrintableCertDetails] = useState<any>(null);
 
   // Sync route with window.location.hash and pathname for GitHub Pages & direct routes
@@ -124,12 +121,6 @@ function MainApp() {
         setCurrentRoute('teacher');
       } else if (combined.includes('student')) {
         setCurrentRoute('student');
-      } else if (combined.includes('parent')) {
-        setCurrentRoute('parent');
-      } else if (combined.includes('accountant')) {
-        setCurrentRoute('accountant');
-      } else if (combined.includes('staff')) {
-        setCurrentRoute('staff');
       } else {
         setCurrentRoute('home');
       }
@@ -176,14 +167,32 @@ function MainApp() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'circles')
     );
 
+    // Registrations listener with cache sync
     const unsubRegs = onSnapshot(
       collection(db, 'registrations'),
       (snap) => {
-        const list: Registration[] = [];
-        snap.forEach((d) => list.push({ ...d.data(), id: d.id } as Registration));
-        setRegistrations(list);
+        const firestoreList: Registration[] = [];
+        snap.forEach((d) => firestoreList.push({ ...d.data(), id: d.id } as Registration));
+
+        setRegistrations((prev) => {
+          // Merge Firestore records with any locally submitted pending records
+          const map = new Map<string, Registration>();
+          // Put cached/local first
+          prev.forEach((r) => map.set(r.id, r));
+          // Put firestore over it
+          firestoreList.forEach((r) => map.set(r.id, r));
+          const merged = Array.from(map.values()).sort(
+            (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+          );
+          try {
+            localStorage.setItem(REGISTRATIONS_CACHE_KEY, JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
       },
-      (err) => handleFirestoreError(err, OperationType.LIST, 'registrations')
+      (err) => {
+        console.warn('Registrations snapshot listener notice:', err);
+      }
     );
 
     const unsubMem = onSnapshot(
@@ -204,16 +213,6 @@ function MainApp() {
         setAttendanceRecords(list);
       },
       (err) => handleFirestoreError(err, OperationType.LIST, 'attendance_records')
-    );
-
-    const unsubPay = onSnapshot(
-      collection(db, 'payments'),
-      (snap) => {
-        const list: PaymentRecord[] = [];
-        snap.forEach((d) => list.push({ ...d.data(), id: d.id } as PaymentRecord));
-        setPayments(list);
-      },
-      (err) => handleFirestoreError(err, OperationType.LIST, 'payments')
     );
 
     const unsubPts = onSnapshot(
@@ -254,7 +253,7 @@ function MainApp() {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setAuditLogs(list);
       },
-      (err) => console.warn('Audit logs read restricted to admin')
+      () => {}
     );
 
     return () => {
@@ -263,7 +262,6 @@ function MainApp() {
       unsubRegs();
       unsubMem();
       unsubAtt();
-      unsubPay();
       unsubPts();
       unsubFiles();
       unsubSettings();
@@ -278,12 +276,6 @@ function MainApp() {
     setPrintableOpen(true);
   };
 
-  const handlePrintReceipt = (payment: PaymentRecord) => {
-    setPrintablePayment(payment);
-    setPrintableMode('receipt');
-    setPrintableOpen(true);
-  };
-
   const handlePrintCertificate = (
     student: Student,
     details: { surahOrJuz: string; grade: string; date: string }
@@ -294,7 +286,73 @@ function MainApp() {
     setPrintableOpen(true);
   };
 
-  const currency = settings?.currency || 'ر.س';
+  // Submit Registration with Immediate Local + Firestore Update
+  const handleRegisterStudent = async (data: any) => {
+    const regId = await submitRegistration(data);
+    const newReg: Registration = {
+      id: regId || `local-${Date.now()}`,
+      studentFullName: data.studentFullName,
+      studentAge: data.studentAge || '',
+      adminRegistrationCode: data.adminRegistrationCode || '',
+      phone: data.phone || '',
+      guardianName: '',
+      guardianPhone: data.phone || '',
+      guardianRelation: '',
+      guardianEmail: '',
+      guardianJob: '',
+      program: 'حفظ عام وتجويد',
+      academicGrade: data.studentAge ? `${data.studentAge} سنوات` : 'غير محدد',
+      nationalId: '',
+      address: 'حي جامع سعيد الجابي',
+      status: 'pending',
+      submittedAt: new Date().toISOString(),
+    };
+
+    setRegistrations((prev) => {
+      const updated = [newReg, ...prev.filter((r) => r.id !== newReg.id)];
+      try {
+        localStorage.setItem(REGISTRATIONS_CACHE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    return regId;
+  };
+
+  // Review Registration with Immediate Status & Student Code Update
+  const handleReviewRegistration = async (
+    regId: string,
+    status: 'approved' | 'rejected' | 'waitlist',
+    decisionNotes: string,
+    circleId?: string,
+    circleName?: string
+  ) => {
+    await reviewRegistration(regId, status, decisionNotes, circleId, circleName);
+
+    setRegistrations((prev) => {
+      const updated = prev.map((r) => {
+        if (r.id === regId) {
+          const generatedCode =
+            status === 'approved' && !r.generatedStudentCode
+              ? `SJ-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`
+              : r.generatedStudentCode;
+          return {
+            ...r,
+            status,
+            decisionNotes,
+            generatedStudentCode: generatedCode,
+            decidedAt: new Date().toISOString(),
+          };
+        }
+        return r;
+      });
+      try {
+        localStorage.setItem(REGISTRATIONS_CACHE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   const pendingRegsCount = registrations.filter((r) => r.status === 'pending').length;
 
   return (
@@ -307,7 +365,7 @@ function MainApp() {
         pendingCount={pendingRegsCount}
       />
 
-      {/* VIEW 1: PUBLIC HOMEPAGE (الصفحة الرئيسية المخصصة للتسجيل) */}
+      {/* VIEW 1: PUBLIC HOMEPAGE (الموقع العام المخصص للتسجيل والاستعلام) */}
       {currentRoute === 'home' && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
           <PublicRegistrationHome
@@ -316,9 +374,7 @@ function MainApp() {
             students={students}
             memorizationRecords={memorizationRecords}
             adminRegistrationCode={settings?.adminRegistrationCode || 'JABY-2026'}
-            onSubmitRegistration={async (data) => {
-              await submitRegistration(data);
-            }}
+            onSubmitRegistration={handleRegisterStudent}
             onNavigateToAdmin={() => navigateToRoute('admin')}
             onNavigateToTeacher={() => navigateToRoute('teacher')}
             onNavigateToStudent={() => navigateToRoute('student')}
@@ -326,24 +382,21 @@ function MainApp() {
         </main>
       )}
 
-      {/* VIEW 2: STUDENT & PARENT PORTAL (بوابة الطالب وولي الأمر فقط) */}
+      {/* VIEW 2: STUDENT PORTAL (بوابة الطالب لمتابعة الحفظ والحضور والنقاط) */}
       {currentRoute === 'student' && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
           <StudentPortalView
             students={students}
             memorizationRecords={memorizationRecords}
             attendanceRecords={attendanceRecords}
-            payments={payments}
             pointsLedger={pointsLedger}
             studentFiles={studentFiles}
-            currency={currency}
             onPrintCard={handlePrintCard}
-            onPrintReceipt={handlePrintReceipt}
           />
         </main>
       )}
 
-      {/* VIEW 3: TEACHER PORTAL (بوابة المعلم لحلقاته وطلابه فقط) */}
+      {/* VIEW 3: TEACHER PORTAL (بوابة المعلم للحلقات والطلاب والتسميع والتحضير) */}
       {currentRoute === 'teacher' && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
           <TeacherPortalView
@@ -356,7 +409,6 @@ function MainApp() {
               setAddMemModalOpen(true);
             }}
             onOpenAttendance={() => {
-              // Direct teacher to attendance view inside admin/attendance or modal
               navigateToRoute('admin');
               setAdminTab('attendance');
             }}
@@ -372,71 +424,7 @@ function MainApp() {
         </main>
       )}
 
-      {/* VIEW 4: PARENT PORTAL (بوابة ولي الأمر لمتابعة الأبناء - رابط منفرد /parent) */}
-      {currentRoute === 'parent' && (
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-          <ParentPortalView
-            students={students}
-            memorizationRecords={memorizationRecords}
-            attendanceRecords={attendanceRecords}
-            payments={payments}
-            pointsLedger={pointsLedger}
-            studentFiles={studentFiles}
-            currency={currency}
-            onPrintCard={handlePrintCard}
-            onPrintReceipt={handlePrintReceipt}
-          />
-        </main>
-      )}
-
-      {/* VIEW 5: ACCOUNTANT PORTAL (بوابة المحاسب المالي وسندات القبض - رابط منفرد /accountant) */}
-      {currentRoute === 'accountant' && (
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-          <AccountantPortalView
-            payments={payments}
-            students={students}
-            currency={currency}
-            onOpenAddPayment={(st) => {
-              setSelectedStudentForPay(st || null);
-              setAddPayModalOpen(true);
-            }}
-            onPrintReceipt={handlePrintReceipt}
-          />
-        </main>
-      )}
-
-      {/* VIEW 6: STAFF PORTAL (بوابة شؤون الطلاب والقبول - رابط منفرد /staff) */}
-      {currentRoute === 'staff' && (
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-          <StaffPortalView
-            registrations={registrations}
-            students={students}
-            circles={circles}
-            studentFiles={studentFiles}
-            onReviewRegistration={reviewRegistration}
-            onOpenNewRegistration={() => setNewRegModalOpen(true)}
-            onOpenAddStudent={() => {
-              setStudentToEdit(null);
-              setAddStudentOpen(true);
-            }}
-            onOpenEditStudent={(st) => {
-              setStudentToEdit(st);
-              setAddStudentOpen(true);
-            }}
-            onViewStudent={(st) => {
-              setSelectedStudentForProfile(st);
-              setProfileModalOpen(true);
-            }}
-            onOpenUploadModal={(st) => {
-              setSelectedStudentForFile(st || null);
-              setUploadFileModalOpen(true);
-            }}
-            onPrintCard={handlePrintCard}
-          />
-        </main>
-      )}
-
-      {/* VIEW 7: ADMIN CONTROL PANEL (لوحة تحكم المدير العام على رابط منفرد /admin) */}
+      {/* VIEW 4: ADMIN CONTROL PANEL (لوحة تحكم إدارة الجامع على رابط منفرد /admin) */}
       {currentRoute === 'admin' && (
         <div className="flex-1 flex max-w-7xl w-full mx-auto">
           {/* Admin Sidebar Navigation */}
@@ -456,7 +444,7 @@ function MainApp() {
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>
-                    أنت تتصفح بوابة الإدارة حالياً بصلاحية «{activeRole}». يمكنك تفعيل دور المدير العام لمعاينة كامل الإعدادات والتحكم بالنظام.
+                    أنت تتصفح لوحة الإدارة بصلاحية «{activeRole}». يمكنك تفعيل دور المدير العام لمعاينة كامل الإعدادات والتحكم بالنظام.
                   </span>
                 </div>
                 <button
@@ -474,10 +462,8 @@ function MainApp() {
                 circles={circles}
                 memorizationRecords={memorizationRecords}
                 attendanceRecords={attendanceRecords}
-                payments={payments}
                 pointsLedger={pointsLedger}
                 registrations={registrations}
-                currency={currency}
                 onNavigate={setAdminTab}
                 onOpenAddStudent={() => {
                   setStudentToEdit(null);
@@ -488,10 +474,6 @@ function MainApp() {
                   setAddMemModalOpen(true);
                 }}
                 onOpenAddAttendance={() => setAdminTab('attendance')}
-                onOpenAddPayment={() => {
-                  setSelectedStudentForPay(null);
-                  setAddPayModalOpen(true);
-                }}
                 onOpenAwardPoints={() => {
                   setSelectedStudentForPoints(null);
                   setAwardPointsModalOpen(true);
@@ -503,7 +485,6 @@ function MainApp() {
               <StudentsView
                 students={students}
                 circles={circles}
-                currency={currency}
                 onOpenAddStudent={() => {
                   setStudentToEdit(null);
                   setAddStudentOpen(true);
@@ -525,7 +506,7 @@ function MainApp() {
               <RegistrationsView
                 registrations={registrations}
                 circles={circles}
-                onReviewRegistration={reviewRegistration}
+                onReviewRegistration={handleReviewRegistration}
                 onOpenNewRegistration={() => setNewRegModalOpen(true)}
               />
             )}
@@ -561,19 +542,6 @@ function MainApp() {
               />
             )}
 
-            {adminTab === 'finance' && (
-              <FinanceView
-                payments={payments}
-                students={students}
-                currency={currency}
-                onOpenAddPayment={() => {
-                  setSelectedStudentForPay(null);
-                  setAddPayModalOpen(true);
-                }}
-                onPrintReceipt={handlePrintReceipt}
-              />
-            )}
-
             {adminTab === 'points' && (
               <PointsView
                 pointsLedger={pointsLedger}
@@ -602,17 +570,14 @@ function MainApp() {
               <ReportsView
                 students={students}
                 circles={circles}
-                payments={payments}
                 memorizationRecords={memorizationRecords}
                 attendanceRecords={attendanceRecords}
-                currency={currency}
                 onPrintCard={handlePrintCard}
                 onPrintCertificate={handlePrintCertificate}
-                onPrintReceipt={handlePrintReceipt}
               />
             )}
 
-            {/* الإعدادات وسجل التدقيق: تظهر حصرياً فقط في حساب الإدارة كما طلب المستخدم! */}
+            {/* الإعدادات وسجل التدقيق: للمدير فقط */}
             {adminTab === 'settings' && (
               <SettingsView
                 settings={settings}
@@ -653,15 +618,9 @@ function MainApp() {
         student={selectedStudentForProfile}
         memorizationRecords={memorizationRecords}
         attendanceRecords={attendanceRecords}
-        payments={payments}
         pointsLedger={pointsLedger}
         studentFiles={studentFiles}
-        currency={currency}
         onPrintCard={handlePrintCard}
-        onOpenAddPayment={(st) => {
-          setSelectedStudentForPay(st);
-          setAddPayModalOpen(true);
-        }}
         onOpenAwardPoints={(st) => {
           setSelectedStudentForPoints(st);
           setAwardPointsModalOpen(true);
@@ -677,7 +636,7 @@ function MainApp() {
         isOpen={newRegModalOpen}
         onClose={() => setNewRegModalOpen(false)}
         onSubmit={async (data) => {
-          await submitRegistration(data);
+          await handleRegisterStudent(data);
         }}
         circles={circles}
         defaultAdminCode={settings?.adminRegistrationCode || 'JABY-2026'}
@@ -697,21 +656,7 @@ function MainApp() {
         }}
       />
 
-      {/* 5. Add Payment / Issue Receipt Modal */}
-      <AddPaymentModal
-        isOpen={addPayModalOpen}
-        onClose={() => {
-          setAddPayModalOpen(false);
-          setSelectedStudentForPay(null);
-        }}
-        students={students}
-        preselectedStudent={selectedStudentForPay}
-        currency={currency}
-        onSubmit={createPayment}
-        onReceiptIssued={handlePrintReceipt}
-      />
-
-      {/* 6. Award / Deduct Points Modal */}
+      {/* 5. Award / Deduct Points Modal */}
       <AwardPointsModal
         isOpen={awardPointsModalOpen}
         onClose={() => {
@@ -733,7 +678,7 @@ function MainApp() {
         }}
       />
 
-      {/* 7. Upload Student File Modal */}
+      {/* 6. Upload Student File Modal */}
       <UploadFileModal
         isOpen={uploadFileModalOpen}
         onClose={() => {
@@ -747,15 +692,14 @@ function MainApp() {
         }}
       />
 
-      {/* 8. Printable Documents Modal */}
+      {/* 7. Printable Documents Modal */}
       <PrintableModal
         isOpen={printableOpen}
         onClose={() => setPrintableOpen(false)}
         mode={printableMode}
         student={printableStudent}
-        payment={printablePayment}
+        payment={null}
         certificateData={printableCertDetails}
-        currency={currency}
         mosqueName={settings?.mosqueName}
       />
     </div>

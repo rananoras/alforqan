@@ -4,7 +4,6 @@ import { DEFAULT_POINT_RULES, DEFAULT_FEE_PLANS } from '../../data/quranData';
 import {
   Settings,
   Shield,
-  DollarSign,
   Award,
   History,
   Save,
@@ -24,7 +23,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   auditLogs,
   onUpdateSettings,
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'currency_fees' | 'point_rules' | 'audit_logs'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'point_rules' | 'audit_logs'>('general');
 
   // Form states
   const [mosqueName, setMosqueName] = useState(
@@ -123,17 +122,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <span>بيانات الجامع والمركز</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('currency_fees')}
-          className={`py-3 px-3 border-b-2 font-bold transition-colors flex items-center gap-1.5 ${
-            activeTab === 'currency_fees'
-              ? 'border-emerald-700 text-emerald-900'
-              : 'border-transparent text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <DollarSign className="w-4 h-4 text-emerald-700" />
-          <span>العملة والرسوم المالية</span>
-        </button>
+
 
         <button
           onClick={() => setActiveTab('point_rules')}
@@ -258,56 +247,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </form>
       )}
 
-      {/* TAB 2: CURRENCY & FEES */}
-      {activeTab === 'currency_fees' && (
-        <form onSubmit={handleSaveGeneral} className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-5 text-xs">
-          <div>
-            <label className="block text-slate-700 font-bold mb-1">
-              العملة المستخدمة في النظام والفواتير
-            </label>
-            <p className="text-[11px] text-slate-500 mb-2">
-              تظهر هذه العملة في الإيصالات وسندات القبض وبطاقات الطلاب والتقارير المالية.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {[
-                { code: 'ر.س', label: 'ريال سعودي (ر.س)' },
-                { code: 'د.إ', label: 'درهم إماراتي (د.إ)' },
-                { code: 'د.ك', label: 'دينار كويتي (د.ك)' },
-                { code: 'ر.ق', label: 'ريال قطري (ر.ق)' },
-                { code: 'ر.ع', label: 'ريال عماني (ر.ع)' },
-                { code: 'د.ب', label: 'دينار بحريني (د.ب)' },
-                { code: 'ج.م', label: 'جنيه مصري (ج.م)' },
-                { code: '$', label: 'دولار أمريكي ($)' },
-              ].map((c) => (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => setCurrency(c.code)}
-                  className={`p-3 rounded-xl border text-center font-bold transition-all ${
-                    currency === c.code
-                      ? 'border-emerald-700 bg-emerald-50 text-emerald-900 shadow-xs'
-                      : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                  }`}
-                >
-                  <span className="block text-sm">{c.code}</span>
-                  <span className="text-[10px] text-slate-500 font-normal">{c.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
 
-          <div className="pt-4 border-t border-slate-200 flex justify-end">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-5 py-2 bg-emerald-800 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-colors flex items-center gap-1.5"
-            >
-              <Save className="w-4 h-4 text-amber-300" />
-              <span>{submitting ? 'جارٍ الحفظ...' : 'حفظ إعدادات العملة'}</span>
-            </button>
-          </div>
-        </form>
-      )}
 
       {/* TAB 3: POINT RULES */}
       {activeTab === 'point_rules' && (
