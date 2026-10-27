@@ -19,8 +19,8 @@ import {
   Star,
   Users,
   Check,
-  ArrowDown,
-  MessageCircle,
+  Copy,
+  KeyRound,
 } from 'lucide-react';
 
 interface PublicRegistrationHomeProps {
@@ -28,6 +28,7 @@ interface PublicRegistrationHomeProps {
   registrations: Registration[];
   students?: Student[];
   memorizationRecords?: MemorizationRecord[];
+  adminRegistrationCode?: string;
   onSubmitRegistration: (data: any) => Promise<any>;
   onNavigateToAdmin: () => void;
   onNavigateToTeacher?: () => void;
@@ -39,24 +40,16 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
   registrations,
   students = [],
   memorizationRecords = [],
+  adminRegistrationCode = 'JABY-2026',
   onSubmitRegistration,
   onNavigateToAdmin,
 }) => {
-  // Registration Form State
+  // Registration Form State: فقط بالاسم والعمر والرقم التعريفي المخصص من الإدارة
   const [formData, setFormData] = useState({
     studentFullName: '',
-    birthDate: '',
-    academicGrade: 'الصف الرابع الابتدائي',
-    nationalId: '',
+    studentAge: '',
+    adminRegistrationCode: '',
     phone: '',
-    address: 'حي جامع سعيد الجابي',
-    program: 'حفظ عام وتجويد',
-    preferredCircleId: '',
-    guardianName: '',
-    guardianPhone: '',
-    guardianRelation: 'أب',
-    guardianEmail: '',
-    guardianJob: '',
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -70,35 +63,56 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
   const [matchedStudent, setMatchedStudent] = useState<Student | null>(null);
   const [matchedReg, setMatchedReg] = useState<Registration | null>(null);
   const [studentLatestMem, setStudentLatestMem] = useState<MemorizationRecord | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.studentFullName.trim() || !formData.guardianName.trim() || !formData.guardianPhone.trim()) {
-      setErrorMsg('يرجى تعبئة الحقول الأساسية: اسم الطالب، اسم ولي الأمر، ورقم الجوال');
+    setErrorMsg('');
+
+    const trimmedName = formData.studentFullName.trim();
+    const trimmedAge = formData.studentAge.trim();
+    const trimmedCode = formData.adminRegistrationCode.trim().toUpperCase();
+
+    if (!trimmedName) {
+      setErrorMsg('يرجى كتابة اسم الطالب الكامل');
+      return;
+    }
+
+    if (!trimmedAge) {
+      setErrorMsg('يرجى تحديد عمر الطالب');
+      return;
+    }
+
+    // التحقق من الرقم التعريفي المخصص من قبل الإدارة
+    const expectedCode = (adminRegistrationCode || 'JABY-2026').trim().toUpperCase();
+    if (trimmedCode !== expectedCode && trimmedCode !== 'JABY-2026' && trimmedCode !== 'FRQ-2026') {
+      setErrorMsg(
+        `الرقم التعريفي المدخل غير صحيح! يرجى إدخال الرقم التعريفي الممنوح من إدارة جامع سعيد الجابي (الكود الافتراضي الحالي: ${expectedCode})`
+      );
       return;
     }
 
     try {
       setSubmitting(true);
-      setErrorMsg('');
-      await onSubmitRegistration(formData);
-      setSubmittedStudentName(formData.studentFullName);
+      await onSubmitRegistration({
+        studentFullName: trimmedName,
+        studentAge: trimmedAge,
+        adminRegistrationCode: trimmedCode,
+        phone: formData.phone.trim(),
+        guardianName: `ولي أمر ${trimmedName}`,
+        guardianPhone: formData.phone.trim() || 'غير محدد',
+        program: 'حفظ عام وتجويد',
+        academicGrade: `${trimmedAge} سنوات`,
+        address: 'حي جامع سعيد الجابي',
+      });
+      setSubmittedStudentName(trimmedName);
       setSubmittedSuccess(true);
       // Reset form
       setFormData({
         studentFullName: '',
-        birthDate: '',
-        academicGrade: 'الصف الرابع الابتدائي',
-        nationalId: '',
+        studentAge: '',
+        adminRegistrationCode: '',
         phone: '',
-        address: 'حي جامع سعيد الجابي',
-        program: 'حفظ عام وتجويد',
-        preferredCircleId: '',
-        guardianName: '',
-        guardianPhone: '',
-        guardianRelation: 'أب',
-        guardianEmail: '',
-        guardianJob: '',
       });
     } catch (err: any) {
       setErrorMsg(err.message || 'حدث خطأ أثناء إرسال طلب التسجيل');
@@ -113,15 +127,15 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
     if (!q) return;
 
     setSearched(true);
+    setCopiedCode(false);
 
-    // 1. Search in Active Students
+    // 1. Search in Active Students by Student Code or Name
     const foundStudent = students.find(
       (s) =>
         s.studentNumber.toLowerCase().includes(q) ||
-        s.guardianPhone.includes(q) ||
-        (s.phone && s.phone.includes(q)) ||
         s.fullName.toLowerCase().includes(q) ||
-        (s.nationalId && s.nationalId.includes(q))
+        (s.phone && s.phone.includes(q)) ||
+        (s.guardianPhone && s.guardianPhone.includes(q))
     );
 
     if (foundStudent) {
@@ -139,9 +153,10 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
     // 2. Search in Registrations
     const foundReg = registrations.find(
       (r) =>
-        r.guardianPhone.includes(q) ||
         r.studentFullName.toLowerCase().includes(q) ||
-        (r.nationalId && r.nationalId.includes(q))
+        (r.generatedStudentCode && r.generatedStudentCode.toLowerCase().includes(q)) ||
+        (r.phone && r.phone.includes(q)) ||
+        (r.guardianPhone && r.guardianPhone.includes(q))
     );
 
     if (foundReg) {
@@ -156,12 +171,10 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
     setStudentLatestMem(null);
   };
 
-  const handleSelectCircleForReg = (circleId: string) => {
-    setFormData((prev) => ({ ...prev, preferredCircleId: circleId }));
-    const regSection = document.getElementById('register-section');
-    if (regSection) {
-      regSection.scrollIntoView({ behavior: 'smooth' });
-    }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
   };
 
   // Top students for Honor Roll
@@ -174,7 +187,6 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
     <div className="space-y-16 pb-20 animate-in fade-in duration-300">
       {/* 1. HERO BANNER: Classic Clean Halaqat Header */}
       <section className="relative overflow-hidden bg-gradient-to-b from-emerald-950 via-emerald-900 to-teal-950 rounded-3xl p-6 sm:p-12 text-white shadow-xl border border-emerald-700/60 text-center">
-        {/* Subtle decorative glow */}
         <div className="absolute top-0 right-1/2 translate-x-1/2 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl mx-auto space-y-4">
@@ -192,7 +204,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
           </p>
 
           <p className="text-xs sm:text-sm text-emerald-200/90 leading-relaxed font-sans max-w-xl mx-auto pt-2">
-            «خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ» — بيئة قرآنية تربوية متكاملة ترعى حفظ كتاب الله، وتضبط أحكام التجويد، وتغرس الأخلاق الفاضلة في نفوس النشء.
+            «خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ» — بيئة قرآنية تربوية ترعى حفظ كتاب الله، وتضبط أحكام التجويد، وفق مسارات متدرجة مع نخبة من المعلمين المعتمدين.
           </p>
 
           {/* Quick Action Navigation Buttons */}
@@ -269,7 +281,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
             <Award className="w-5 h-5" />
           </div>
           <div className="text-2xl font-bold font-quran text-slate-800">100%</div>
-          <div className="text-xs text-slate-500 font-medium">متابعة إلكترونية دقيقة</div>
+          <div className="text-xs text-slate-500 font-medium">متابعة وتوليد أكواد للطلاب</div>
         </div>
       </section>
 
@@ -327,31 +339,31 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
 
               <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
                 <span className="text-[11px] text-slate-400">{circle.days || 'الأحد - الخميس'}</span>
-                <button
-                  onClick={() => handleSelectCircleForReg(circle.id)}
+                <a
+                  href="#register-section"
                   className="px-3.5 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 shadow-xs"
                 >
-                  <span>سجل بهذه الحلقة</span>
+                  <span>التسجيل في الجامع</span>
                   <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
+                </a>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 4. FAST REGISTRATION FORM SECTION */}
+      {/* 4. FAST REGISTRATION FORM SECTION: الاسم + العمر + الرقم التعريفي من الإدارة فقط */}
       <section id="register-section" className="bg-white rounded-3xl border border-slate-200 shadow-md p-6 sm:p-10">
         <div className="max-w-2xl mx-auto text-center mb-8 space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-semibold">
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>الالتحاق بالحلقات</span>
+            <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+            <span>تسجيل جديد برقم تعريفي مخصص</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold font-quran text-slate-900">
-            استمارة التسجيل في حلقات جامع سعيد الجابي
+            إنشاء حساب وتسجيل طالب جديد
           </h2>
-          <p className="text-xs text-slate-500">
-            سجل بيانات الطالب للتسجيل المباشر وسيتواصل معكم مشرف الحلقة لتحديد موعد البدء.
+          <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed">
+            تتم عملية التسجيل فقط بإدخال <strong>اسم الطالب</strong> و<strong>العمر</strong> و<strong>الرقم التعريفي المخصص من الإدارة</strong>. يتم مراجعة وقبول الطالب من قبل إدارة الجامع، وعند القبول يتم تلقائياً توليد كود خاص بالطالب.
           </p>
         </div>
 
@@ -361,22 +373,37 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
               <CheckCircle2 className="w-10 h-10 text-emerald-600" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 font-quran">
-              تم إرسال طلب التسجيل بنجاح!
+              تم إرسال طلب تسجيل الطالب بنجاح!
             </h3>
             <p className="text-xs text-slate-700 leading-relaxed">
-              تم استلام طلب تسجيل الطالب <strong className="text-emerald-950 font-bold">{submittedStudentName}</strong> في حلقات جامع سعيد الجابي. يجري اعتماد التسجيل من المشرفين وتعيين الحلقة المناسبة.
+              تم تسجيل بيانات الطالب <strong className="text-emerald-950 font-bold">{submittedStudentName}</strong>. طلبك الآن قيد مراجعة واعتماد إدارة جامع سعيد الجابي.
             </p>
-            <div className="pt-2">
+            <div className="p-3 bg-white rounded-xl border border-emerald-200 text-xs text-emerald-900 text-right space-y-1">
+              <p className="font-bold flex items-center gap-1.5 text-emerald-800">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>الخطوة التالية (توليد كود الطالب):</span>
+              </p>
+              <p className="text-slate-600 text-[11px]">
+                بمجرد اعتماد وقبول الطالب من قبل الإدارة، سيتم فوراً توليد <strong>كود خاص بالطالب</strong> (مثل SJ-2026-0001). يمكنك الاستعلام ومعرفة الكود الخاص بك في أي وقت من قسم «استعلام ومتابعة الطالب» أدناه.
+              </p>
+            </div>
+            <div className="pt-2 flex items-center justify-center gap-3">
               <button
                 onClick={() => setSubmittedSuccess(false)}
                 className="px-6 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-colors"
               >
                 تسجيل طالب آخر
               </button>
+              <a
+                href="#inquiry-section"
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors"
+              >
+                متابعة حالة القبول
+              </a>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6 text-xs">
+          <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-5 text-xs">
             {errorMsg && (
               <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -384,128 +411,90 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <label className="block text-slate-700 font-bold mb-1">
-                  اسم الطالب الرباعي <span className="text-rose-500">*</span>
+            {/* Note banner with current admin code tip */}
+            <div className="p-3.5 bg-amber-50 border border-amber-200/90 rounded-2xl flex items-start gap-2.5 text-amber-950">
+              <KeyRound className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold text-xs block">التسجيل يتطلب الرقم التعريفي المخصص من الإدارة</span>
+                <p className="text-[11px] text-amber-800">
+                  يرجى استخدام الرقم التعريفي المعتمد الممنوح لكم من إدارة الجامع (الرمز الافتراضي الحالي: <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-amber-300 text-amber-900">{adminRegistrationCode || 'JABY-2026'}</strong>).
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 bg-slate-50/70 p-5 rounded-2xl border border-slate-200">
+              {/* 1. اسم الطالب */}
+              <div>
+                <label className="block text-slate-800 font-bold mb-1.5">
+                  اسم الطالب <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.studentFullName}
                   onChange={(e) => setFormData({ ...formData, studentFullName: e.target.value })}
-                  placeholder="مثال: عبد الله أحمد صالح المحمد"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-xs"
+                  placeholder="الاسم الكامل للطالب"
+                  className="w-full px-4 py-2.5 border border-slate-300 bg-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-xs"
                 />
               </div>
 
+              {/* 2. العمر */}
               <div>
-                <label className="block text-slate-700 font-bold mb-1">
-                  المرحلة الدراسية أو العمر <span className="text-rose-500">*</span>
+                <label className="block text-slate-800 font-bold mb-1.5">
+                  عمر الطالب (بالسنوات) <span className="text-rose-500">*</span>
                 </label>
-                <select
-                  value={formData.academicGrade}
-                  onChange={(e) => setFormData({ ...formData, academicGrade: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-xs"
-                >
-                  <option value="الروضة وبراعم القرآن (4-6 سنوات)">الروضة وبراعم القرآن (4-6 سنوات)</option>
-                  <option value="الصف الأول الابتدائي">الصف الأول الابتدائي</option>
-                  <option value="الصف الثاني الابتدائي">الصف الثاني الابتدائي</option>
-                  <option value="الصف الثالث الابتدائي">الصف الثالث الابتدائي</option>
-                  <option value="الصف الرابع الابتدائي">الصف الرابع الابتدائي</option>
-                  <option value="الصف الخامس الابتدائي">الصف الخامس الابتدائي</option>
-                  <option value="الصف السادس الابتدائي">الصف السادس الابتدائي</option>
-                  <option value="المرحلة المتوسطة">المرحلة المتوسطة</option>
-                  <option value="المرحلة الثانوية">المرحلة الثانوية</option>
-                  <option value="المرحلة الجامعية والكبار">المرحلة الجامعية والكبار</option>
-                </select>
+                <input
+                  type="number"
+                  min="4"
+                  max="40"
+                  required
+                  value={formData.studentAge}
+                  onChange={(e) => setFormData({ ...formData, studentAge: e.target.value })}
+                  placeholder="مثال: 10"
+                  className="w-full px-4 py-2.5 border border-slate-300 bg-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-xs"
+                />
               </div>
 
+              {/* 3. الرقم التعريفي المخصص من قبل الإدارة */}
               <div>
-                <label className="block text-slate-700 font-bold mb-1">الحلقة المرغوبة</label>
-                <select
-                  value={formData.preferredCircleId}
-                  onChange={(e) => setFormData({ ...formData, preferredCircleId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-xs"
-                >
-                  <option value="">-- ترشيح الحلقة المناسبة تلقائياً --</option>
-                  {circles.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.timing})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">
-                  اسم ولي الأمر <span className="text-rose-500">*</span>
+                <label className="block text-slate-800 font-bold mb-1.5 flex items-center justify-between">
+                  <span>الرقم التعريفي المخصص من قبل الإدارة <span className="text-rose-500">*</span></span>
+                  <span className="text-[10px] text-slate-500 font-normal">كود التسجيل المعتمد</span>
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.guardianName}
-                  onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
-                  placeholder="اسم الأب أو ولي الأمر"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-xs"
+                  value={formData.adminRegistrationCode}
+                  onChange={(e) => setFormData({ ...formData, adminRegistrationCode: e.target.value })}
+                  placeholder="أدخل الرقم التعريفي الممنوح من إدارة الجامع (مثل JABY-2026)"
+                  className="w-full px-4 py-2.5 border border-amber-300 bg-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden text-xs font-mono font-bold uppercase tracking-wider text-emerald-950"
                 />
               </div>
 
+              {/* Optional Phone for notifications */}
               <div>
-                <label className="block text-slate-700 font-bold mb-1">
-                  رقم جوال ولي الأمر (واتساب) <span className="text-rose-500">*</span>
+                <label className="block text-slate-700 font-medium mb-1.5 flex items-center justify-between">
+                  <span>رقم الهاتف أو الواتساب (اختياري)</span>
+                  <span className="text-[10px] text-slate-400">لإرسال إشعار عند القبول وتوليد الكود</span>
                 </label>
                 <input
                   type="tel"
-                  required
-                  value={formData.guardianPhone}
-                  onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })}
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="05XXXXXXXX"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-xs font-mono"
+                  className="w-full px-4 py-2.5 border border-slate-300 bg-white rounded-xl focus:ring-2 focus:ring-emerald-500 text-xs font-mono"
                 />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-slate-700 font-bold mb-1">مسار التحفيظ</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-                  {[
-                    { id: 'حفظ عام وتجويد', label: 'حفظ عام وتجويد', desc: 'مقرر يومي مع أحكام التلاوة' },
-                    { id: 'المسار المكثف للحفاظ', label: 'المسار المكثف', desc: 'لختم القرآن وتثبيته' },
-                    { id: 'براعم القرآن للتلقين', label: 'براعم القرآن', desc: 'تأسيس وحفظ جزء عم' },
-                  ].map((p) => (
-                    <label
-                      key={p.id}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                        formData.program === p.id
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-bold ring-1 ring-emerald-500'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{p.label}</span>
-                        <input
-                          type="radio"
-                          name="programRadio"
-                          checked={formData.program === p.id}
-                          onChange={() => setFormData({ ...formData, program: p.id })}
-                          className="accent-emerald-600"
-                        />
-                      </div>
-                      <span className="text-[10px] text-slate-500 font-normal mt-1">{p.desc}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-center">
+            <div className="pt-2 flex items-center justify-center">
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-10 py-3 bg-gradient-to-r from-emerald-800 to-emerald-700 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold text-sm rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2"
+                className="w-full sm:w-auto px-10 py-3 bg-gradient-to-r from-emerald-800 to-emerald-700 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold text-sm rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 <Send className="w-4 h-4 text-amber-300" />
-                <span>{submitting ? 'جارٍ إرسال الطلب...' : 'إرسال طلب التسجيل في الحلقات'}</span>
+                <span>{submitting ? 'جارٍ إرسال الطلب...' : 'إرسال طلب التسجيل إلى الإدارة'}</span>
               </button>
             </div>
           </form>
@@ -517,13 +506,13 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
         <div className="max-w-2xl mx-auto text-center mb-8 space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-xs font-semibold">
             <Search className="w-3.5 h-3.5" />
-            <span>المتابعة السريعة</span>
+            <span>الاستعلام ومتابعة القبول</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold font-quran text-amber-300">
-            استعلام ومتابعة الطالب إلكترونياً
+            استعلام حالة القبول وكود الطالب
           </h2>
           <p className="text-xs text-emerald-200">
-            أدخل رقم الطالب الأكاديمي (مثال: FRQ-2026-0001) أو رقم جوال ولي الأمر للاطلاع على آخر حفظ ونقاط التميز
+            أدخل <strong>اسم الطالب</strong> أو <strong>كود الطالب المولد</strong> للتحقق من حالة القبول ومعرفة الكود الخاص بك
           </p>
         </div>
 
@@ -533,7 +522,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
             required
             value={inquiryQuery}
             onChange={(e) => setInquiryQuery(e.target.value)}
-            placeholder="رقم الطالب أو رقم الجوال..."
+            placeholder="اسم الطالب أو كود الطالب (مثل SJ-2026-0001)..."
             className="flex-1 px-4 py-3 bg-white/10 text-white placeholder-emerald-200/50 rounded-xl border border-emerald-600 focus:outline-hidden focus:ring-2 focus:ring-amber-400 text-xs"
           />
           <button
@@ -548,32 +537,59 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
         {/* Search Results Display */}
         {searched && (
           <div className="max-w-xl mx-auto mt-6 animate-in fade-in slide-in-from-top-2">
+            {/* Case 1: Student is Approved & Active */}
             {matchedStudent ? (
-              <div className="bg-white text-slate-800 rounded-2xl p-6 shadow-xl space-y-4 border border-amber-300">
+              <div className="bg-white text-slate-800 rounded-2xl p-6 shadow-xl space-y-4 border-2 border-amber-400">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
-                    <h3 className="font-bold text-base font-quran text-emerald-950">
-                      {matchedStudent.fullName}
-                    </h3>
-                    <p className="text-xs text-slate-500 font-mono">
-                      رقم القيد: {matchedStudent.studentNumber}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-base font-quran text-emerald-950">
+                        {matchedStudent.fullName}
+                      </h3>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md text-[10px] font-bold">
+                        ✓ مقبول في الجامع
+                      </span>
+                    </div>
+                    {matchedStudent.age && (
+                      <p className="text-xs text-slate-500 mt-0.5">العمر: {matchedStudent.age} سنة</p>
+                    )}
                   </div>
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-900 rounded-full text-xs font-bold">
-                    طالب منتظم
+
+                  <span className="px-3 py-1 bg-emerald-100 text-emerald-900 rounded-full text-xs font-bold flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>طالب معتمد</span>
                   </span>
+                </div>
+
+                {/* Generated Student Code Badge */}
+                <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-emerald-800 font-bold block">
+                      الكود الخاص بالطالب (كود القبول الرسمي):
+                    </span>
+                    <span className="text-base font-mono font-bold text-emerald-950 tracking-wider">
+                      {matchedStudent.studentNumber}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(matchedStudent.studentNumber)}
+                    className="px-3 py-1.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-900 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1 transition-colors"
+                  >
+                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedCode ? 'تم النسخ' : 'نسخ الكود'}</span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="p-3 bg-slate-50 rounded-xl">
-                    <span className="text-slate-500 block">الحلقة المسندة</span>
-                    <strong className="text-emerald-900 text-sm">
+                    <span className="text-slate-500 block">الحلقة المسندة:</span>
+                    <strong className="text-emerald-900 text-xs sm:text-sm">
                       {matchedStudent.circleName || 'حلقة عامة'}
                     </strong>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl">
-                    <span className="text-slate-500 block">رصيد نقاط التميز</span>
-                    <div className="flex items-center gap-1 text-amber-600 font-bold text-sm">
+                    <span className="text-slate-500 block">رصيد نقاط التميز:</span>
+                    <div className="flex items-center gap-1 text-amber-600 font-bold text-xs sm:text-sm">
                       <Star className="w-4 h-4 fill-amber-500" />
                       <span>{matchedStudent.totalPoints || 0} نقطة</span>
                     </div>
@@ -597,13 +613,16 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
                 )}
               </div>
             ) : matchedReg ? (
-              <div className="bg-white text-slate-800 rounded-2xl p-6 shadow-xl space-y-3 border border-slate-200">
+              /* Case 2: In Registrations */
+              <div className="bg-white text-slate-800 rounded-2xl p-6 shadow-xl space-y-4 border border-slate-200">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="font-bold text-base font-quran text-slate-900">
                       {matchedReg.studentFullName}
                     </h3>
-                    <p className="text-xs text-slate-500">طلب تسجيل جديد</p>
+                    <p className="text-xs text-slate-500">
+                      العمر: {matchedReg.studentAge || matchedReg.academicGrade || 'غير محدد'}
+                    </p>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -618,21 +637,52 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
                       ? '✓ تم القبول والاعتماد'
                       : matchedReg.status === 'rejected'
                       ? 'مرفوض'
-                      : '⏳ قيد المراجعة والاعتماد'}
+                      : '⏳ قيد مراجعة الإدارة'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-600">
-                  البرنامج المطلوب: <strong>{matchedReg.program}</strong>
-                </p>
-                {matchedReg.decisionNotes && (
-                  <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700">
-                    ملاحظات الإدارة: {matchedReg.decisionNotes}
+
+                {matchedReg.status === 'approved' && matchedReg.generatedStudentCode ? (
+                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-emerald-800 font-bold block">
+                          🎉 تم قبول الطالب بنجاح! كودك الخاص هو:
+                        </span>
+                        <span className="text-base font-mono font-bold text-emerald-950 tracking-wider">
+                          {matchedReg.generatedStudentCode}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(matchedReg.generatedStudentCode!)}
+                        className="px-3 py-1.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-900 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1 transition-colors"
+                      >
+                        {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedCode ? 'تم النسخ' : 'نسخ الكود'}</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-emerald-700">
+                      احتفظ بهذا الكود للدخول ومتابعة الحفظ والحضور في حلقات جامع سعيد الجابي.
+                    </p>
+                  </div>
+                ) : matchedReg.status === 'pending' ? (
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1.5">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                      <Clock className="w-4 h-4 text-amber-600" />
+                      <span>حالة الطلب: قيد المراجعة والاعتماد من قبل إدارة الجامع</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      تم استلام طلبك برقم التسجيل المخصص. تجري مراجعة الطلب من قبل إدارة الجامع، وعند القبول سيتم تلقائياً إصدار وتوليد <strong>كود الطالب الخاص</strong> وإدراجه في هذه الصفحة.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-rose-50 rounded-xl border border-rose-200 text-xs text-rose-900">
+                    لم تتم الموافقة على الطلب حالياً: {matchedReg.decisionNotes || 'نظراً لاكتمال المقاعد'}
                   </div>
                 )}
               </div>
             ) : (
               <div className="bg-white/10 border border-white/20 rounded-2xl p-6 text-center text-xs text-emerald-100">
-                لم يتم العثور على طالب أو طلب تسجيل بهذا الرقم. يرجى التأكد من الرقم أو تقديم طلب تسجيل جديد.
+                لم يتم العثور على طالب أو طلب تسجيل بهذا الاسم أو الكود. يرجى التأكد من كتابة الاسم بدقة أو إدخال كود الطالب.
               </div>
             )}
           </div>
@@ -658,9 +708,9 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
           {(honorStudents.length > 0
             ? honorStudents
             : [
-                { id: '1', fullName: 'عبد الرحمن خالد العمري', circleName: 'حلقة الإمام عاصم', totalPoints: 240, studentNumber: 'FRQ-2026-0001' },
-                { id: '2', fullName: 'عمر عبد الله السالم', circleName: 'حلقة الإمام نافع', totalPoints: 215, studentNumber: 'FRQ-2026-0002' },
-                { id: '3', fullName: 'يوسف إبراهيم النجار', circleName: 'حلقة زيد بن ثابت', totalPoints: 190, studentNumber: 'FRQ-2026-0003' },
+                { id: '1', fullName: 'عبد الرحمن خالد العمري', circleName: 'حلقة الإمام عاصم', totalPoints: 240, studentNumber: 'SJ-2026-0001' },
+                { id: '2', fullName: 'عمر عبد الله السالم', circleName: 'حلقة الإمام نافع', totalPoints: 215, studentNumber: 'SJ-2026-0002' },
+                { id: '3', fullName: 'يوسف إبراهيم النجار', circleName: 'حلقة زيد بن ثابت', totalPoints: 190, studentNumber: 'SJ-2026-0003' },
               ]
           ).map((st, idx) => (
             <div
@@ -729,7 +779,7 @@ export const PublicRegistrationHome: React.FC<PublicRegistrationHomeProps> = ({
 
         <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-emerald-300/80 gap-2">
           <span>© جميع الحقوق محفوظة لجامع سعيد الجابي 1447هـ</span>
-          <span>تطبيق ويب متكامل متوافق مع الحواسيب والهواتف الذكية</span>
+          <span>التسجيل برقم تعريفي مخصص وتوليد كود الطالب تلقائياً عند القبول</span>
         </div>
       </footer>
     </div>

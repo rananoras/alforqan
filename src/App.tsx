@@ -315,6 +315,7 @@ function MainApp() {
             registrations={registrations}
             students={students}
             memorizationRecords={memorizationRecords}
+            adminRegistrationCode={settings?.adminRegistrationCode || 'JABY-2026'}
             onSubmitRegistration={async (data) => {
               await submitRegistration(data);
             }}
@@ -679,6 +680,7 @@ function MainApp() {
           await submitRegistration(data);
         }}
         circles={circles}
+        defaultAdminCode={settings?.adminRegistrationCode || 'JABY-2026'}
       />
 
       {/* 4. Add Memorization Session Modal */}

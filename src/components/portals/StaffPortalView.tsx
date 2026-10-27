@@ -65,8 +65,8 @@ export const StaffPortalView: React.FC<StaffPortalViewProps> = ({
     const matchesFilter = regFilter === 'all' || r.status === regFilter;
     const matchesSearch =
       r.studentFullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.guardianName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.guardianPhone.includes(searchTerm);
+      (r.guardianName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.guardianPhone || '').includes(searchTerm);
     return matchesFilter && matchesSearch;
   });
 

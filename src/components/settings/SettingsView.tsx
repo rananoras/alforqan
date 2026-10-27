@@ -38,6 +38,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [email, setEmail] = useState(settings?.email || 'info@saeed-aljabi.org');
   const [address, setAddress] = useState(settings?.address || 'حي جامع سعيد الجابي - الشارع العام');
   const [academicYear, setAcademicYear] = useState(settings?.academicYear || '1447-1448هـ / 2026م');
+  const [adminRegistrationCode, setAdminRegistrationCode] = useState(
+    settings?.adminRegistrationCode || 'JABY-2026'
+  );
 
   // Point rules custom state
   const [pointRulesList, setPointRulesList] = useState<PointRule[]>(() => {
@@ -66,6 +69,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         email,
         address,
         academicYear,
+        adminRegistrationCode,
         pointRules: JSON.stringify(pointRulesList),
       });
       setSavedSuccess(true);
@@ -220,6 +224,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg"
               />
+            </div>
+
+            <div className="sm:col-span-2 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1.5">
+              <label className="block text-amber-950 font-bold text-xs flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-amber-600" />
+                <span>الرقم التعريفي المخصص من قبل الإدارة للتسجيل الإلكتروني</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={adminRegistrationCode}
+                onChange={(e) => setAdminRegistrationCode(e.target.value)}
+                placeholder="مثال: JABY-2026"
+                className="w-full sm:w-1/2 px-3 py-2 border border-amber-300 bg-white rounded-lg font-mono font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 uppercase"
+              />
+              <p className="text-[11px] text-amber-800">
+                هذا الرمز يُمنح من إدارة الجامع للطلاب أو أولياء الأمور الراغبين في التسجيل لإنشاء الحساب بالاسم والعمر، ولا يمكن إرسال الطلب بدونه لمنع التسجيلات العشوائية.
+              </p>
             </div>
           </div>
 

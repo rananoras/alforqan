@@ -86,6 +86,9 @@
       "type": "object",
       "properties": {
         "studentFullName": { "type": "string", "maxLength": 128 },
+        "studentAge": { "type": "string", "maxLength": 32 },
+        "adminRegistrationCode": { "type": "string", "maxLength": 64 },
+        "generatedStudentCode": { "type": "string", "maxLength": 64 },
         "birthDate": { "type": "string", "maxLength": 32 },
         "academicGrade": { "type": "string", "maxLength": 64 },
         "nationalId": { "type": "string", "maxLength": 32 },
@@ -102,9 +105,10 @@
         "decisionNotes": { "type": "string", "maxLength": 500 },
         "submittedAt": { "type": "string" },
         "decidedAt": { "type": "string" },
-        "decidedBy": { "type": "string", "maxLength": 128 }
+        "decidedBy": { "type": "string", "maxLength": 128 },
+        "studentIdCreated": { "type": "string", "maxLength": 128 }
       },
-      "required": ["studentFullName", "guardianName", "guardianPhone", "program", "status", "submittedAt"]
+      "required": ["studentFullName", "status", "submittedAt"]
     },
     "MemorizationRecord": {
       "title": "MemorizationRecord",

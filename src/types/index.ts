@@ -19,6 +19,7 @@ export interface Student {
   id: string; // Firestore document ID
   studentNumber: string; // Fixed unique ID: FRQ-2026-0001
   fullName: string;
+  age?: number | string;
   gender: Gender;
   birthDate: string;
   academicGrade: string; // المرحلة الدراسية (ابتدائي، متوسط، ثانوي، جامعي)
@@ -64,16 +65,19 @@ export type RegistrationStatus = 'pending' | 'approved' | 'rejected' | 'waitlist
 export interface Registration {
   id: string;
   studentFullName: string;
-  birthDate: string;
-  academicGrade: string;
+  studentAge?: number | string; // عمر الطالب
+  adminRegistrationCode?: string; // الرقم التعريفي المخصص من قبل الإدارة
+  generatedStudentCode?: string; // الكود الخاص بالطالب الذي يتم توليده عند قبول الإدارة
+  birthDate?: string;
+  academicGrade?: string;
   nationalId?: string;
   phone?: string;
   address?: string;
   program: string;
   preferredCircleId?: string;
-  guardianName: string;
-  guardianPhone: string;
-  guardianRelation: string;
+  guardianName?: string;
+  guardianPhone?: string;
+  guardianRelation?: string;
   guardianEmail?: string;
   guardianJob?: string;
   status: RegistrationStatus;
@@ -210,6 +214,7 @@ export interface SystemSetting {
   phone: string;
   email: string;
   address: string;
+  adminRegistrationCode?: string; // الرقم التعريفي المخصص من قبل الإدارة للتسجيل
   pointRules: string; // JSON string of PointRule[]
   feePlans: string; // JSON string of fee schedules
   academicYear: string;

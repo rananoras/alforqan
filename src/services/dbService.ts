@@ -30,20 +30,22 @@ import {
 } from '../types';
 import { DEFAULT_POINT_RULES, DEFAULT_FEE_PLANS } from '../data/quranData';
 
-// Generate next unique student number like FRQ-2026-0001
+// Generate next unique student code like SJ-2026-0001
 export async function generateNextStudentNumber(): Promise<string> {
   const currentYear = new Date().getFullYear();
-  const prefix = `FRQ-${currentYear}-`;
+  const prefix = `SJ-${currentYear}-`;
   try {
     const studentsSnap = await getDocs(collection(db, 'students'));
     let maxNum = 0;
     studentsSnap.forEach((d) => {
       const data = d.data() as Student;
-      if (data.studentNumber && data.studentNumber.startsWith(prefix)) {
+      if (data.studentNumber) {
         const parts = data.studentNumber.split('-');
-        const num = parseInt(parts[2], 10);
-        if (!isNaN(num) && num > maxNum) {
-          maxNum = num;
+        if (parts.length >= 3) {
+          const num = parseInt(parts[2], 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
         }
       }
     });
@@ -51,6 +53,7 @@ export async function generateNextStudentNumber(): Promise<string> {
     return `${prefix}${nextSeq}`;
   } catch (err) {
     handleFirestoreError(err, OperationType.GET, 'students');
+    return `${prefix}0001`;
   }
 }
 
@@ -116,6 +119,7 @@ export async function seedInitialDataIfEmpty() {
         email: 'info@saeed-aljabi.org',
         address: 'حي جامع سعيد الجابي - الشارع العام',
         academicYear: '1447-1448هـ / 2026م',
+        adminRegistrationCode: 'JABY-2026',
         pointRules: JSON.stringify(DEFAULT_POINT_RULES),
         feePlans: JSON.stringify(DEFAULT_FEE_PLANS),
         updatedAt: new Date().toISOString(),
@@ -428,37 +432,40 @@ export async function reviewRegistration(
     const regData = regSnap.data() as Registration;
 
     let createdStudentId = '';
+    let generatedStudentCode = '';
 
     if (status === 'approved') {
-      // Create student automatically with unique number
+      // توليد كود خاص بالطالب عند القبول
       const studentNumber = await generateNextStudentNumber();
+      generatedStudentCode = studentNumber;
       const stRef = doc(collection(db, 'students'));
       createdStudentId = stRef.id;
 
       const newStudent: Student = {
         id: stRef.id,
-        studentNumber,
+        studentNumber, // كود الطالب المولد مثل SJ-2026-0001
         fullName: regData.studentFullName,
+        age: regData.studentAge || '',
         gender: 'male',
         birthDate: regData.birthDate || '',
-        academicGrade: regData.academicGrade || '',
+        academicGrade: regData.academicGrade || (regData.studentAge ? `${regData.studentAge} سنوات` : 'غير محدد'),
         nationalId: regData.nationalId || '',
-        phone: regData.phone || '',
-        address: regData.address || '',
+        phone: regData.phone || regData.guardianPhone || '',
+        address: regData.address || 'حي جامع سعيد الجابي',
         circleId: circleId || regData.preferredCircleId || '',
         circleName: circleName || '',
-        program: regData.program,
-        guardianName: regData.guardianName,
-        guardianPhone: regData.guardianPhone,
-        guardianRelation: regData.guardianRelation,
+        program: regData.program || 'حفظ عام وتجويد',
+        guardianName: regData.guardianName || `ولي أمر ${regData.studentFullName}`,
+        guardianPhone: regData.guardianPhone || regData.phone || '',
+        guardianRelation: regData.guardianRelation || 'ولي أمر',
         guardianEmail: regData.guardianEmail || '',
         guardianJob: regData.guardianJob || '',
         status: 'active',
-        totalPoints: 20, // Welcome points
+        totalPoints: 25, // نقاط ترحيبية فورية عند قبول الطالب
         completedJuz: 0,
-        feeBalance: 100, // Initial registration fee
+        feeBalance: 0,
         registeredAt: new Date().toISOString(),
-        notes: `تم القبول من استمارة التسجيل الإلكترونية: ${decisionNotes}`,
+        notes: `تم اعتماد وقبول الطالب رسمياً من قبل الإدارة بكود: ${studentNumber}. ${decisionNotes || ''}`,
       };
       await setDoc(stRef, newStudent);
 
@@ -469,20 +476,21 @@ export async function reviewRegistration(
         studentId: stRef.id,
         studentName: newStudent.fullName,
         type: 'add',
-        points: 20,
-        reason: 'نقاط ترحيبية عند قبول التسجيل والالتحاق بالجامع',
+        points: 25,
+        reason: `مكافأة قبول الطالب واعتماد الكود الأكاديمي (${studentNumber})`,
         eventKey: `reg-welcome-${stRef.id}`,
-        awardedBy: auth.currentUser?.displayName || 'إدارة التسجيل',
+        awardedBy: auth.currentUser?.displayName || 'إدارة جامع سعيد الجابي',
         createdAt: new Date().toISOString(),
       });
     }
 
     await updateDoc(doc(db, 'registrations', regId), {
       status,
-      decisionNotes,
+      decisionNotes: decisionNotes || (status === 'approved' ? 'تم القبول وتوليد كود الطالب بنجاح' : ''),
       decidedAt: new Date().toISOString(),
-      decidedBy: auth.currentUser?.displayName || auth.currentUser?.email || 'لجنة القبول',
+      decidedBy: auth.currentUser?.displayName || auth.currentUser?.email || 'إدارة جامع سعيد الجابي',
       studentIdCreated: createdStudentId || null,
+      generatedStudentCode: generatedStudentCode || null,
     });
 
     await logAuditEvent(

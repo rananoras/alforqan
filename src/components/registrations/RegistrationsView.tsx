@@ -7,12 +7,12 @@ import {
   XCircle,
   AlertCircle,
   Eye,
-  Filter,
   Check,
   X,
   Phone,
-  Mail,
-  Home,
+  Sparkles,
+  KeyRound,
+  Copy,
   GraduationCap,
 } from 'lucide-react';
 
@@ -41,6 +41,7 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
   const [selectedCircleId, setSelectedCircleId] = useState('');
   const [decisionNotes, setDecisionNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
 
   const filteredRegistrations = registrations.filter((r) => {
     if (filterStatus === 'all') return true;
@@ -75,6 +76,12 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
     }
   };
 
+  const copyCode = (code: string, id: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCodeId(id);
+    setTimeout(() => setCopiedCodeId(null), 2000);
+  };
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Header */}
@@ -82,10 +89,10 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-800 font-quran flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-emerald-800" />
-            <span>طلبات التسجيل في جامع سعيد الجابي وحلقات القرآن</span>
+            <span>طلبات التسجيل وقبول الطلاب وتوليد الأكواد</span>
           </h2>
           <p className="text-xs text-slate-500">
-            مراجعة طلبات الانضمام للجامع، وتخصيص الحلقات، وإصدار أرقام القبول الثابتة
+            مراجعة طلبات الطلاب المسجلة بالاسم والعمر والرقم التعريفي، واعتماد القبول مع توليد كود خاص بكل طالب
           </p>
         </div>
 
@@ -109,7 +116,7 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
           }`}
         >
           <Clock className="w-3.5 h-3.5 text-amber-600" />
-          <span>طلبات قيد المراجعة ({registrations.filter((r) => r.status === 'pending').length})</span>
+          <span>طلبات قيد المراجعة والقبول ({registrations.filter((r) => r.status === 'pending').length})</span>
         </button>
 
         <button
@@ -121,7 +128,7 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
           }`}
         >
           <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-          <span>المقبولة ({registrations.filter((r) => r.status === 'approved').length})</span>
+          <span>الطلاب المقبولون والأكواد المولدّة ({registrations.filter((r) => r.status === 'approved').length})</span>
         </button>
 
         <button
@@ -159,14 +166,13 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
             <table className="w-full text-right text-xs">
               <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
                 <tr>
-                  <th className="p-3.5">تاريخ الطلب</th>
-                  <th className="p-3.5">اسم المتقدم</th>
-                  <th className="p-3.5">المرحلة الدراسية</th>
-                  <th className="p-3.5">البرنامج المطلوب</th>
-                  <th className="p-3.5">ولي الأمر</th>
-                  <th className="p-3.5">جوال التواصل</th>
+                  <th className="p-3.5">تاريخ التقديم</th>
+                  <th className="p-3.5">اسم الطالب</th>
+                  <th className="p-3.5">العمر</th>
+                  <th className="p-3.5">الرقم التعريفي المستخدم</th>
+                  <th className="p-3.5">كود الطالب المولد</th>
                   <th className="p-3.5">الحالة</th>
-                  <th className="p-3.5 text-center">الإجراء</th>
+                  <th className="p-3.5 text-center">إجراء الإدارة</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -178,8 +184,8 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
                     waitlist: 'bg-blue-100 text-blue-800 border-blue-200',
                   };
                   const statusLabels: Record<string, string> = {
-                    pending: 'قيد المراجعة',
-                    approved: 'تم القبول والاعتماد',
+                    pending: '⏳ قيد المراجعة',
+                    approved: '✓ مقبول (تم توليد الكود)',
                     rejected: 'مرفوض',
                     waitlist: 'قائمة الانتظار',
                   };
@@ -192,13 +198,27 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
                       <td className="p-3.5 font-bold text-slate-800">
                         {reg.studentFullName}
                       </td>
-                      <td className="p-3.5 text-slate-600">{reg.academicGrade}</td>
-                      <td className="p-3.5 font-medium text-emerald-900">{reg.program}</td>
-                      <td className="p-3.5 text-slate-700">{reg.guardianName} ({reg.guardianRelation})</td>
-                      <td className="p-3.5 font-mono text-emerald-700">
-                        <a href={`tel:${reg.guardianPhone}`} className="hover:underline">
-                          {reg.guardianPhone}
-                        </a>
+                      <td className="p-3.5 text-slate-600">
+                        {reg.studentAge ? `${reg.studentAge} سنة` : reg.academicGrade || '-'}
+                      </td>
+                      <td className="p-3.5 font-mono text-emerald-800 font-bold">
+                        {reg.adminRegistrationCode || 'JABY-2026'}
+                      </td>
+                      <td className="p-3.5">
+                        {reg.generatedStudentCode ? (
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-950 border border-emerald-300 rounded font-mono font-bold text-xs">
+                            <span>{reg.generatedStudentCode}</span>
+                            <button
+                              onClick={() => copyCode(reg.generatedStudentCode!, reg.id)}
+                              title="نسخ كود الطالب"
+                              className="text-emerald-700 hover:text-emerald-950"
+                            >
+                              {copiedCodeId === reg.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">يتم التوليد عند القبول</span>
+                        )}
                       </td>
                       <td className="p-3.5 whitespace-nowrap">
                         <span
@@ -212,10 +232,14 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
                       <td className="p-3.5 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleOpenReview(reg)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold transition-colors inline-flex items-center gap-1"
+                          className={`px-3 py-1 rounded-lg font-bold transition-colors inline-flex items-center gap-1 ${
+                            reg.status === 'pending'
+                              ? 'bg-amber-500 hover:bg-amber-400 text-emerald-950 shadow-xs'
+                              : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                          }`}
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          <span>{reg.status === 'pending' ? 'مراجعة واعتماد' : 'عرض التفاصيل'}</span>
+                          <span>{reg.status === 'pending' ? 'مراجعة وقبول الطالب' : 'عرض التفاصيل'}</span>
                         </button>
                       </td>
                     </tr>
@@ -233,7 +257,7 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full border border-slate-200 overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="px-5 py-4 bg-gradient-to-r from-emerald-800 to-teal-800 text-white flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-sm">مراجعة طلب تسجيل: {selectedReg.studentFullName}</h3>
+                <h3 className="font-bold text-sm">مراجعة واعتماد طلب الطالب: {selectedReg.studentFullName}</h3>
                 <span className="text-[11px] text-emerald-200">
                   تاريخ التقديم: {new Date(selectedReg.submittedAt).toLocaleDateString('ar-SA')}
                 </span>
@@ -248,35 +272,57 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
 
             <div className="p-5 space-y-4 text-xs">
               {/* Applicant Summary */}
-              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 grid grid-cols-2 gap-2">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-slate-500 block">المرحلة الدراسية:</span>
-                  <span className="font-bold text-slate-800">{selectedReg.academicGrade}</span>
+                  <span className="text-slate-500 block">اسم الطالب الكامل:</span>
+                  <strong className="text-slate-900 text-sm">{selectedReg.studentFullName}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">البرنامج المطلوب:</span>
-                  <span className="font-bold text-emerald-800">{selectedReg.program}</span>
+                  <span className="text-slate-500 block">العمر:</span>
+                  <strong className="text-slate-900 text-sm">
+                    {selectedReg.studentAge ? `${selectedReg.studentAge} سنة` : selectedReg.academicGrade || 'غير محدد'}
+                  </strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">ولي الأمر:</span>
-                  <span className="font-bold text-slate-800">
-                    {selectedReg.guardianName} ({selectedReg.guardianRelation})
+                  <span className="text-slate-500 block">الرقم التعريفي المخصص من الإدارة:</span>
+                  <span className="font-mono font-bold text-emerald-800">
+                    {selectedReg.adminRegistrationCode || 'JABY-2026'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">جوال التواصل:</span>
-                  <span className="font-mono font-bold text-emerald-700">{selectedReg.guardianPhone}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-slate-500 block">العنوان:</span>
-                  <span className="text-slate-700">{selectedReg.address || 'حي جامع سعيد الجابي'}</span>
+                  <span className="text-slate-500 block">رقم التواصل / الجوال:</span>
+                  <span className="font-mono text-slate-700">
+                    {selectedReg.phone || selectedReg.guardianPhone || 'لم يحدد'}
+                  </span>
                 </div>
               </div>
 
+              {/* Generated Code if already approved */}
+              {selectedReg.status === 'approved' && selectedReg.generatedStudentCode && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+                  <span className="text-[11px] text-emerald-800 font-bold block">
+                    ✓ تم قبول الطالب وتوليد الكود الأكاديمي الخاص به:
+                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-mono font-bold text-emerald-950">
+                      {selectedReg.generatedStudentCode}
+                    </span>
+                    <button
+                      onClick={() => copyCode(selectedReg.generatedStudentCode!, selectedReg.id)}
+                      className="px-3 py-1 bg-white border border-emerald-300 text-emerald-900 rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs"
+                    >
+                      {copiedCodeId === selectedReg.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedCodeId === selectedReg.id ? 'تم النسخ' : 'نسخ الكود'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Assignment Circle */}
               <div>
-                <label className="block font-bold text-slate-800 mb-1">
-                  تخصيص الحلقة القرآنية عند القبول:
+                <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <GraduationCap className="w-4 h-4 text-emerald-700" />
+                  <span>تخصيص الحلقة القرآنية للطالب عند القبول:</span>
                 </label>
                 <select
                   value={selectedCircleId}
@@ -294,22 +340,16 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
               {/* Decision Notes */}
               <div>
                 <label className="block font-bold text-slate-800 mb-1">
-                  ملاحظات وتوجيهات لجنة القبول:
+                  توجيهات أو ملاحظات الإدارة (اختياري):
                 </label>
                 <textarea
                   rows={2}
                   value={decisionNotes}
                   onChange={(e) => setDecisionNotes(e.target.value)}
-                  placeholder="سبب القبول، أو توجيه الطالب لمستوى معين..."
+                  placeholder="ملاحظات القبول، أو توجيه الطالب لمستوى معين..."
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                 />
               </div>
-
-              {selectedReg.status === 'approved' && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 text-xs font-medium">
-                  ✓ تم قبول الطالب وإصدار رقمه الأكاديمي الثابت بنجاح.
-                </div>
-              )}
 
               {/* Decision Action Buttons */}
               <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
@@ -327,7 +367,7 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
                       type="button"
                       disabled={submitting}
                       onClick={() => handleDecision('rejected')}
-                      className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg border border-rose-200 transition-colors flex items-center gap-1"
+                      className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg border border-rose-200 transition-colors flex items-center gap-1"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>رفض الطلب</span>
@@ -337,10 +377,10 @@ export const RegistrationsView: React.FC<RegistrationsViewProps> = ({
                       type="button"
                       disabled={submitting}
                       onClick={() => handleDecision('approved')}
-                      className="px-4 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-colors flex items-center gap-1"
+                      className="px-5 py-2 bg-gradient-to-r from-emerald-800 to-emerald-700 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold rounded-lg shadow-md transition-colors flex items-center gap-1.5"
                     >
-                      <Check className="w-3.5 h-3.5 text-amber-300" />
-                      <span>{submitting ? 'جارٍ الاعتماد...' : 'قبول وإصدار رقم الطالب فوراً'}</span>
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>{submitting ? 'جارٍ توليد الكود...' : 'قبول الطالب وتوليد كود خاص به فوراً'}</span>
                     </button>
                   </>
                 )}
